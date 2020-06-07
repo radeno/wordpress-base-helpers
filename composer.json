@@ -1,0 +1,12 @@
+{
+  "name": "rado/wordpress-base-helpers",
+  "version": "1.0.0",
+  "authors": [
+    {
+      "name": "Radovan Šmitala",
+      "homepage": "https://github.com/radeno/wordpress-base-helpers"
+    }
+  ],
+  "license": "MIT",
+  "require": {}
+}
