@@ -5,6 +5,28 @@ namespace helper;
 require_once "PostTypeHelper.php";
 require_once "TaxonomyHelper.php";
 
+if (!function_exists("rest_is_field_included")) {
+    function rest_is_field_included($field, $fields)
+    {
+        if (in_array($field, $fields, true)) {
+            return true;
+        }
+        foreach ($fields as $accepted_field) {
+            // Check to see if $field is the parent of any item in $fields.
+            // A field "parent" should be accepted if "parent.child" is accepted.
+            if (strpos($accepted_field, "$field.") === 0) {
+                return true;
+            }
+            // Conversely, if "parent" is accepted, all "parent.child" fields should
+            // also be accepted.
+            if (strpos($field, "$accepted_field.") === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
 class AnyPostsRestController extends \WP_REST_Controller
 {
     public function __construct()

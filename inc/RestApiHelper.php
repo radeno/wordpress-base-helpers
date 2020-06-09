@@ -7,26 +7,6 @@ require_once "TaxonomyHelper.php";
 require_once "AnyPostsRestController.php";
 require_once "AnyTermsRestController.php";
 
-function rest_is_field_included($field, $fields)
-{
-    if (in_array($field, $fields, true)) {
-        return true;
-    }
-    foreach ($fields as $accepted_field) {
-        // Check to see if $field is the parent of any item in $fields.
-        // A field "parent" should be accepted if "parent.child" is accepted.
-        if (strpos($accepted_field, "$field.") === 0) {
-            return true;
-        }
-        // Conversely, if "parent" is accepted, all "parent.child" fields should
-        // also be accepted.
-        if (strpos($field, "$accepted_field.") === 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
 class RestApiHelper
 {
     public static function initActionsAndFilters()
@@ -35,7 +15,6 @@ class RestApiHelper
         self::addFeaturedImage();
         self::addStickyProperty();
         self::addStickyQueryParam();
-        self::removeLinks();
         self::addAnyPostsRoute();
         self::addAnyTermsRoute();
     }
@@ -155,27 +134,6 @@ class RestApiHelper
                     },
                     10,
                     2
-                );
-            }
-        });
-    }
-
-    public static function removeLinks()
-    {
-        \add_action('rest_api_init', function () {
-            $types = array_merge(PostTypeHelper::getAllPostTypes(), TaxonomyHelper::getAllTaxonomies());
-            foreach ($types as $type) {
-                \add_filter(
-                    "rest_prepare_{$type}",
-                    function ($data, $post, $request) {
-                        foreach ($data->get_links() as $_linkKey => $_linkVal) {
-                            $data->remove_link($_linkKey);
-                        }
-
-                        return $data;
-                    },
-                    1,
-                    3
                 );
             }
         });
