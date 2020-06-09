@@ -76,9 +76,6 @@ class CapabilityHelper
                     break;
             }
 
-            // print_r($required_caps);
-            // print_r($cap);
-
             return $required_caps;
         }, 10, 4);
 
