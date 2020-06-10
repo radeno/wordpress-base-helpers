@@ -31,31 +31,6 @@ class AdminHelper
             );
         });
 
-        \add_action('admin_head', function () {
-            ?>
-            <style type="text/css">
-                /* Menu */
-                .menu-theme-locations,
-                .auto-add-pages {
-                    display: none;
-                }
-
-                /* Visibility */
-                #visibility-radio-public ~ br,
-                #password-span,
-                #password-span ~ br,
-                #visibility-radio-private,
-                label[for="visibility-radio-private"],
-                #visibility-radio-password,
-                #visibility-radio-password ~ br,
-                label[for="visibility-radio-password"],
-                .inline-edit-col-left .inline-edit-group {
-                    display: none;
-                }
-            </style>
-        <?php
-        });
-
         \add_action('admin_init', function () {
             if (! \current_user_can('edit_others_posts') && !isset($_GET['attachment-filter'])) {
                 $_GET['attachment-filter'] = 'mine';
