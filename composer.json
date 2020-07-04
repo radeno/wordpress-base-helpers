@@ -1,6 +1,6 @@
 {
   "name": "radeno/wordpress-base-helpers",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "wordpress-plugin",
   "authors": [
     {
@@ -9,12 +9,13 @@
     }
   ],
   "license": "MIT",
-  "config": {
-    "platform": {
-      "php": "^7.3"
-    }
+  "require": {
+    "php": "^7.3",
+    "giggsey/libphonenumber-for-php": "~8.12.7"
   },
-  "require": {},
+  "replace": {
+    "symfony/polyfill-mbstring": "*"
+  },
   "suggest": {
     "wordpress": "WP 5.3 and higher"
   }
