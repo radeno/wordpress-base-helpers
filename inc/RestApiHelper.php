@@ -58,6 +58,10 @@ class RestApiHelper
         $featuredImage = function ($object, $field_name, $request) {
             if ($object['featured_media']) {
                 $img = \wp_get_attachment_metadata($object['featured_media']);
+                if ($img === false) {
+                    return null;
+                }
+
                 foreach ($img['sizes'] as $size => $meta) {
                     $attachmentImageSrc = \wp_get_attachment_image_src(
                         $object['featured_media'],
