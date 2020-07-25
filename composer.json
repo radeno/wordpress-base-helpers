@@ -17,6 +17,6 @@
     "symfony/polyfill-mbstring": "*"
   },
   "suggest": {
-    "wordpress": "WP 5.3 and higher"
+    "wordpress": "WP 5.2 and higher"
   }
 }
