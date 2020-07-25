@@ -71,17 +71,17 @@
     },
     {
         "name": "giggsey/locale",
-        "version": "1.8",
-        "version_normalized": "1.8.0.0",
+        "version": "1.9",
+        "version_normalized": "1.9.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/giggsey/Locale.git",
-            "reference": "85a1b251bad11c986fec2a051b10d4b80a5caa1b"
+            "reference": "b07f1eace8072ccc61445ad8fbd493ff9d783043"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/giggsey/Locale/zipball/85a1b251bad11c986fec2a051b10d4b80a5caa1b",
-            "reference": "85a1b251bad11c986fec2a051b10d4b80a5caa1b",
+            "url": "https://api.github.com/repos/giggsey/Locale/zipball/b07f1eace8072ccc61445ad8fbd493ff9d783043",
+            "reference": "b07f1eace8072ccc61445ad8fbd493ff9d783043",
             "shasum": ""
         },
         "require": {
@@ -99,7 +99,7 @@
             "symfony/finder": "^2.8|^3.0|^4.0",
             "symfony/process": "^2.8|^3.0|^4.0"
         },
-        "time": "2019-10-09T18:53:14+00:00",
+        "time": "2020-07-07T11:16:24+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
