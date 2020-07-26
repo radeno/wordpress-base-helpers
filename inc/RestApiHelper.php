@@ -70,7 +70,7 @@ class RestApiHelper
                     $img['sizes'][$size]['source_url'] = $attachmentImageSrc[0] ?? null;
                 }
 
-                if ($img['url']) {
+                if (isset($img['url'])) {
                     $img['full_url'] = $img['url'];
                 }
 
