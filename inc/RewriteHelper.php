@@ -47,6 +47,21 @@ class RewriteHelper
         \add_rewrite_rule($regex, $redirect, 'top');
     }
 
+    public static function removeIndependentTaxonomyRewrite($taxonomy)
+    {
+        $taxonomyObject = \get_taxonomy($taxonomy);
+
+        \add_filter("rewrite_rules_array", function ($rules) use ($taxonomyObject) {
+            foreach ($rules as $rule => $rewrite) {
+                if (strpos($rule, $taxonomyObject->rewrite["slug"]) === 0) {
+                    unset($rules[$rule]);
+                }
+            }
+
+            return $rules;
+        });
+    }
+
     public static function modifyRewriteArgs($prettyLink, $args)
     {
         $newRewrite = [
