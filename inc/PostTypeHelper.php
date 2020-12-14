@@ -9,9 +9,14 @@ class PostTypeHelper
         return \get_post_types(['_builtin' => false, 'public' => true], $output);
     }
 
+    public static function getBuiltinPostTypes($output = 'names')
+    {
+        return \get_post_types(['_builtin' => true, 'public' => true], $output);
+    }
+
     public static function getAllPostTypes($output = 'names')
     {
-        return array_merge(\get_post_types(['_builtin' => true, 'public' => true], $output), self::getPostTypes($output));
+        return array_merge(self::getBuiltinPostTypes($output), self::getPostTypes($output));
     }
 
     public static function getAllRestPostTypes($output = 'names')

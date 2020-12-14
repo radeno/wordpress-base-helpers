@@ -14,9 +14,14 @@ class TaxonomyHelper
         return \get_taxonomies(['_builtin' => false, 'public' => true], $output);
     }
 
+    public static function getBuiltinTaxonomies($output = 'names')
+    {
+        return \get_taxonomies(['_builtin' => true, 'public' => true], $output);
+    }
+
     public static function getAllTaxonomies($output = 'names')
     {
-        return array_merge(\get_taxonomies(['_builtin' => false, 'public' => true], $output), self::getTaxonomies($output));
+        return array_merge(self::getBuiltinTaxonomies($output), self::getTaxonomies($output));
     }
 
     public static function getAllRestTaxonomies($output = 'names')
