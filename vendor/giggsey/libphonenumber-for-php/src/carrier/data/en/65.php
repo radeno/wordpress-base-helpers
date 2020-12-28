@@ -12,6 +12,10 @@
 
 return array (
   65801 => 'TPG',
+  658018 => 'SingTel',
+  658019 => 'SingTel',
+  65802 => 'SingTel',
+  65803 => 'SingTel',
   6581 => 'StarHub',
   65810 => 'M1',
   65812 => 'SingTel',
@@ -306,6 +310,7 @@ return array (
   658908 => 'SingTel',
   658909 => 'SingTel',
   65891 => 'TPG',
+  658920 => 'StarHub',
   658921 => 'M1',
   658922 => 'M1',
   658923 => 'M1',
@@ -320,6 +325,9 @@ return array (
   658932 => 'TPG',
   658933 => 'TPG',
   658934 => 'TPG',
+  658935 => 'M1',
+  658936 => 'M1',
+  658937 => 'M1',
   658938 => 'SingTel',
   658939 => 'SingTel',
   658940 => 'SingTel',
