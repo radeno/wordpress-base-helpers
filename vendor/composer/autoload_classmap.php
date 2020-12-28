@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'Giggsey\\Locale\\Locale' => $vendorDir . '/giggsey/locale/src/Locale.php',
     'libphonenumber\\AlternateFormatsCountryCodeSet' => $vendorDir . '/giggsey/libphonenumber-for-php/src/AlternateFormatsCountryCodeSet.php',
     'libphonenumber\\AsYouTypeFormatter' => $vendorDir . '/giggsey/libphonenumber-for-php/src/AsYouTypeFormatter.php',
