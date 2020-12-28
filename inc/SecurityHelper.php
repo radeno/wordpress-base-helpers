@@ -11,7 +11,7 @@ class SecurityHelper
         self::removeOthers();
         self::disableEmojis();
         self::removeCommentsAction();
-        self::removeFeedsAction();
+        self::removeArchiveFeedsAction();
         self::removeTrackbacksAction();
         self::removeUserRestEndpoints();
         self::removeUserRestFields();
@@ -63,11 +63,11 @@ class SecurityHelper
         \add_filter('emoji_svg_url', '__return_false');
     }
 
-    public static function removeFeedsAction()
+    public static function removeArchiveFeedsAction()
     {
         \add_filter('rewrite_rules_array', function ($rules) {
             foreach ($rules as $rule => $rewrite) {
-                if (preg_match('/^.*(feed)/', $rule)) {
+                if (strpos($rule, 'feed') !== false && preg_match('/^(?!(\(?feed))/', $rule)) {
                     unset($rules[$rule]);
                 }
             }
@@ -76,7 +76,7 @@ class SecurityHelper
         });
 
         \remove_action('wp_head', 'feed_links', 2); // Display the links to the general feeds: Post and Comment Feed
-        \remove_action('wp_head', 'feed_links_extra', 3); // Display the links to the extra feeds such as category feeds
+        // \remove_action('wp_head', 'feed_links_extra', 3); // Display the links to the extra feeds such as category feeds
     }
 
     public static function removeCommentsAction()
