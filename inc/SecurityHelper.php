@@ -28,6 +28,7 @@ class SecurityHelper
         \add_filter('avf_profile_head_tag', '__return_false');
         # Remove generator
         \remove_action('wp_head', 'wp_generator');
+        \add_filter('the_generator', '__return_null');
 
         # Disable XML-RPC
         \add_filter('xmlrpc_enabled', '__return_null');
