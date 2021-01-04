@@ -59,4 +59,17 @@ class QueryHelper
             )
         );
     }
+
+    public static function getPostBySlug(string $slug, array $postTypes): ?\WP_Post
+    {
+        $query = new \WP_Query([
+            "post_type"           => $postTypes,
+            "post_name__in"       => [$slug],
+            "post_status"         => "publish",
+            "order"               => "ASC",
+            "ignore_sticky_posts" => true,
+        ]);
+
+        return $query->posts[0] ?? null;
+    }
 }
