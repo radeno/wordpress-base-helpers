@@ -28,6 +28,14 @@ class MenuHelper
                     $changedParentIds[] = $item->menu_item_parent;
                 }
 
+                if ($item->type === 'taxonomy') {
+                    $postTermsIds = \wp_get_post_terms(get_the_ID(), $item->object, ['fields' => 'ids']);
+                    if (! \is_wp_error($postTermsIds) && in_array($item->object_id, $postTermsIds)) {
+                        $item = $setActiveItem($item);
+                        $changedParentIds[] = $item->menu_item_parent;
+                    }
+                }
+
                 return $item;
             }, $sorted_menu_items);
 
