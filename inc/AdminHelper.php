@@ -15,6 +15,7 @@ class AdminHelper
         self::sortRolesFilter();
         self::removeMetaBoxesAction();
         self::removeAdminDashboards();
+        self::addLastModifiedColumn();
     }
 
     public static function reorganizeNavigationAction()
@@ -128,5 +129,82 @@ class AdminHelper
         });
 
         \remove_action('welcome_panel', 'wp_welcome_panel');
+    }
+
+    public static function addLastModifiedColumn() {
+        // Register Modified Date Column for both posts & pages
+        function modified_column_register( $columns ) {
+            $columns['Modified'] = __( 'Modified Date', '' );
+            return $columns;
+        }
+        \add_filter( 'manage_posts_columns', 'modified_column_register' );
+        \add_filter( 'manage_pages_columns', 'modified_column_register' );
+
+        function modified_column_display( $column_name, $post_id ) {
+            switch ( $column_name ) {
+            case 'Modified':
+                global $post;
+                       echo '<p class="mod-date">';
+                       echo '<em>'.\get_the_modified_date().' '.\get_the_modified_time().'</em><br />';
+                    if ( !empty( \get_the_modified_author() ) ) {
+                        echo '<small>' . \esc_html__( 'by', 'show-modified-date-in-admin-lists' ) . ' <strong>'.\get_the_modified_author().'<strong></small>';
+                    } else {
+                        echo '<small>' . \esc_html__( 'by', 'show-modified-date-in-admin-lists' ) . ' <strong>' . \esc_html__( 'UNKNOWN', 'show-modified-date-in-admin-lists' ) . '<strong></small>';
+                    }
+                    echo '</p>';
+                break; // end all case breaks
+            }
+        }
+        \add_action( 'manage_posts_custom_column', 'modified_column_display', 10, 2 );
+        \add_action( 'manage_pages_custom_column', 'modified_column_display', 10, 2 );
+
+        function modified_column_register_sortable( $columns ) {
+            $columns['Modified'] = 'modified';
+            return $columns;
+        }
+        \add_filter( 'manage_edit-post_sortable_columns', 'modified_column_register_sortable' );
+        \add_filter( 'manage_edit-page_sortable_columns', 'modified_column_register_sortable' );
+    }
+
+    public static function addLastModifiedColumn() {
+        // Register Modified Date Column for both posts & pages
+        $modifiedColumnRegister = function ($columns) {
+            $columns["modified"] = __("Last Modified");
+            return $columns;
+        };
+
+        $modifiedColumnDisplay = function ($column_name, $post_id) {
+            switch ($column_name) {
+                case "modified":
+                    global $post;
+                    echo '<p class="mod-date">';
+                    echo "<em>" . \get_the_modified_date() . " " . \get_the_modified_time() . "</em><br />";
+                    if (!empty(\get_the_modified_author())) {
+                        echo "<small>" .
+                            \esc_html__("by") .
+                            " <strong>" .
+                            \get_the_modified_author() .
+                            "<strong></small>";
+                    } else {
+                        echo "<small>" . \esc_html__("by") . " <strong>" . \esc_html__("UNKNOWN") . "<strong></small>";
+                    }
+                    echo "</p>";
+                    break; // end all case breaks
+            }
+        };
+
+        $modifiedColumnRegisterSortable = function ($columns) {
+            $columns["modified"] = "modified";
+            return $columns;
+        };
+
+        \add_filter("manage_posts_columns", $modifiedColumnRegister);
+        \add_action("manage_posts_custom_column", $modifiedColumnDisplay, 10, 2);
+
+        \add_action("admin_init", function () use ($modifiedColumnRegisterSortable) {
+            foreach (PostTypeHelper::getAllPostTypes() as $postType) {
+                \add_filter("manage_edit-{$postType}_sortable_columns", $modifiedColumnRegisterSortable);
+            }
+        });
     }
 }
