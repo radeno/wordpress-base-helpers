@@ -163,8 +163,10 @@ class AdminHelper
             return $columns;
         };
 
+        \add_filter("manage_pages_columns", $modifiedColumnRegister);
         \add_filter("manage_posts_columns", $modifiedColumnRegister);
         \add_action("manage_posts_custom_column", $modifiedColumnDisplay, 10, 2);
+        \add_action("manage_pages_custom_column", $modifiedColumnDisplay, 10, 2);
 
         \add_action("admin_init", function () use ($modifiedColumnRegisterSortable) {
             foreach (PostTypeHelper::getAllPostTypes() as $postType) {
