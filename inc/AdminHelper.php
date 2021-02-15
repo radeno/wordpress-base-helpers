@@ -142,8 +142,8 @@ class AdminHelper
             switch ($column_name) {
                 case "modified":
                     global $post;
-                    echo '<p class="mod-date">';
-                    echo "<em>" . \get_the_modified_date() . " " . \get_the_modified_time() . "</em><br />";
+                    echo \get_the_modified_date() . " " . \get_the_modified_time();
+                    echo "<br />";
                     if (!empty(\get_the_modified_author())) {
                         echo "<small>" .
                             \esc_html__("by") .
