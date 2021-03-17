@@ -6,12 +6,13 @@ class QueryHelper
 {
     public static function initActionsAndFilters()
     {
-        self::extendOrderbyFieldsAction();
+        self::extendOrderbyFieldsFilter();
+        self::extendWhereFieldsFilter();
     }
 
-    public static function extendOrderbyFieldsAction()
+    public static function extendOrderbyFieldsFilter()
     {
-        $orderByExtension = function ($orderby, $wp_query) {
+        $orderByExtension = function (string $orderby, \WP_Query $wp_query) {
             if (isset($wp_query->query_vars['orderby']) && 'title_last_index' === $wp_query->query_vars['orderby']) {
                 global $wpdb;
                 $orderby = " SUBSTRING_INDEX({$wpdb->posts}.post_title, ' ', -1 ) ";
@@ -21,6 +22,21 @@ class QueryHelper
         };
 
         \add_filter('posts_orderby', $orderByExtension, 10, 2);
+    }
+
+    public static function extendWhereFieldsFilter()
+    {
+        $whereExtension = function (string $where, \WP_Query $wp_query) {
+            if (isset($wp_query->query['post_content_like'])) {
+                global $wpdb;
+                $whereContent = str_replace("'", "\\'", $wp_query->query['post_content_like']);
+                $where .= " AND {$wpdb->posts}.post_content LIKE '{$whereContent}' ";
+            }
+
+            return $where;
+        };
+
+        \add_filter('posts_where', $whereExtension, 10, 2);
     }
 
     public static function getAllPosts($postType, array $queryArgs = [])
