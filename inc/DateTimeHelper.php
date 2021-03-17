@@ -9,7 +9,7 @@ class DateTimeHelper
         return \current_time("c");
     }
 
-    public static function isBetween(string $date, string $startDate, string $endDate = null)
+    public static function isBetween($date, $startDate, $endDate = null)
     {
         if (is_null($startDate) && is_null($endDate)) {
             return true;
@@ -20,7 +20,7 @@ class DateTimeHelper
         }
 
         if (is_null($endDate)) {
-            return self::AfterEqual($date, $startDate);
+            return self::isAfterEqual($date, $startDate);
         }
 
         return self::isAfterEqual($date, $startDate) && self::isBeforeEqual($date, $endDate);
