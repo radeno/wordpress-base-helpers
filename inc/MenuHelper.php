@@ -12,7 +12,7 @@ class MenuHelper
     public static function addClassesToActiveItemAction()
     {
         \add_action('wp_nav_menu_objects', function ($sorted_menu_items, $args) {
-            $setActiveItem = function ($item) {
+            $setParentActiveItem = function ($item) {
                 $item->current_item_ancestor = true;
                 $item->current_item_parent = true;
                 $item->classes[] = 'current-menu-ancestor';
@@ -20,19 +20,31 @@ class MenuHelper
                 return $item;
             };
 
-            $addedParentIds = array_unique(array_map(function ($item) {
+            $setCurrentActiveItem = function ($item) {
+                $item->classes[] = 'current-menu-item';
+
+                return $item;
+            };
+
+            $addedParentIds = [];
+            $addedCurrentIds = [];
+            foreach ($sorted_menu_items as $item) {
                 if (!\is_singular()) {
                     return null;
                 }
 
                 if ($item->type === 'post_type_archive' && \get_post_type() === $item->object) {
-                    return $item->menu_item_parent;
+                    $addedCurrentIds[] = $item->ID;
+                    $addedParentIds[] = $item->menu_item_parent;
+                    continue;
                 }
 
                 if ($item->type === 'taxonomy') {
                     $postTermsIds = \wp_get_post_terms(\get_the_id(), $item->object, ['fields' => 'ids']);
                     if (! \is_wp_error($postTermsIds) && in_array($item->object_id, $postTermsIds)) {
-                        return $item->menu_item_parent;
+                        $addedCurrentIds[] = $item->ID;
+                        $addedParentIds[] = $item->menu_item_parent;
+                        continue;
                     }
                 }
 
@@ -40,15 +52,20 @@ class MenuHelper
                     $ancestorsIds = \get_post_ancestors(\get_the_id());
                     if (!empty($ancestorsIds)) {
                         if (in_array((int)$item->object_id, $ancestorsIds)) {
-                            return $item->ID;
+                            $addedCurrentIds[] = $item->ID;
+                            $addedParentIds[] = $item->menu_item_parent;
+                            continue;
                         }
                     }
                 }
-            }, $sorted_menu_items));
+            };
 
-            return array_map(function ($item) use ($setActiveItem, $addedParentIds) {
+            return array_map(function ($item) use ($setParentActiveItem, $setCurrentActiveItem, $addedParentIds, $addedCurrentIds) {
                 if (in_array($item->ID, $addedParentIds)) {
-                    $item = $setActiveItem($item);
+                    $item = $setParentActiveItem($item);
+                }
+                if (in_array($item->ID, $addedCurrentIds)) {
+                    $item = $setCurrentActiveItem($item);
                 }
 
                 return $item;
