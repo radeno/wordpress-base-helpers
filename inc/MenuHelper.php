@@ -30,7 +30,7 @@ class MenuHelper
             $addedCurrentIds = [];
             foreach ($sorted_menu_items as $item) {
                 if (!\is_singular()) {
-                    return null;
+                    continue;
                 }
 
                 if ($item->type === 'post_type_archive' && \get_post_type() === $item->object) {
