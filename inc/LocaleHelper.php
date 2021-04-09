@@ -11,6 +11,6 @@ class LocaleHelper
 
     public static function getCountryCode(): string
     {
-        return substr(\get_locale(), 2, 2);
+        return substr(\get_locale(), 3, 2);
     }
 }
