@@ -75,8 +75,7 @@ class SecurityHelper
             return $rules;
         });
 
-        \remove_action('wp_head', 'feed_links', 2); // Display the links to the general feeds: Post and Comment Feed
-        // \remove_action('wp_head', 'feed_links_extra', 3); // Display the links to the extra feeds such as category feeds
+        \remove_action('wp_head', 'feed_links_extra', 3); // Display the links to the extra feeds such as category feeds
     }
 
     public static function removeCommentsAction()
