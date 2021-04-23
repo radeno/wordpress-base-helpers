@@ -26,6 +26,7 @@ require_once "inc/RestApiHelper.php";
 require_once "inc/RewriteHelper.php";
 require_once "inc/TaxonomyHelper.php";
 require_once "inc/PostTypeHelper.php";
+require_once "inc/ContentTypeHelper.php";
 require_once "inc/SecurityHelper.php";
 
 AdminHelper::initActionsAndFilters();
