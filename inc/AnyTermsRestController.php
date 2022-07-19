@@ -15,7 +15,7 @@ class AnyTermsRestController extends \WP_REST_Controller
     }
 
     /**
-     * Registers the routes for the objects of the controller.
+     * Registers the routes for terms.
      *
      * @since 4.7.0
      *
@@ -66,7 +66,7 @@ class AnyTermsRestController extends \WP_REST_Controller
      * @since 4.7.0
      *
      * @param WP_REST_Request $request Full details about the request.
-     * @return bool|WP_Error True if the request has read access, otherwise false or WP_Error object.
+     * @return true|WP_Error True if the request has read access, otherwise false or WP_Error object.
      */
     public function get_items_permissions_check($request)
     {
@@ -144,9 +144,14 @@ class AnyTermsRestController extends \WP_REST_Controller
         }
 
         /**
-         * Filters the query arguments before passing them to get_terms().
+         * Filters get_terms() arguments when querying terms via the REST API.
          *
          * The dynamic portion of the hook name, `$this->taxonomy`, refers to the taxonomy slug.
+         *
+         * Possible hook names include:
+         *
+         *  - `rest_category_query`
+         *  - `rest_post_tag_query`
          *
          * Enables adding extra arguments or setting defaults for a terms
          * collection request.
@@ -155,9 +160,8 @@ class AnyTermsRestController extends \WP_REST_Controller
          *
          * @link https://developer.wordpress.org/reference/functions/get_terms/
          *
-         * @param array           $prepared_args Array of arguments to be
-         *                                       passed to get_terms().
-         * @param WP_REST_Request $request       The current request.
+         * @param array           $prepared_args Array of arguments for get_terms().
+         * @param WP_REST_Request $request       The REST API request.
          */
         $prepared_args = \apply_filters("rest_any_terms_query", $prepared_args, $request);
 
@@ -244,8 +248,8 @@ class AnyTermsRestController extends \WP_REST_Controller
             return $error;
         }
 
-        $term = get_term((int) $id, $this->taxonomy);
-        if (empty($term) || $term->taxonomy !== $this->taxonomy) {
+        $term = \get_term((int) $id);
+        if (empty($term) || !in_array($term->taxonomy, $this->taxonomies)) {
             return $error;
         }
 
@@ -258,7 +262,7 @@ class AnyTermsRestController extends \WP_REST_Controller
      * @since 4.7.0
      *
      * @param WP_REST_Request $request Full details about the request.
-     * @return bool|WP_Error True if the request has read access for the item, otherwise false or WP_Error object.
+     * @return true|WP_Error True if the request has read access for the item, otherwise false or WP_Error object.
      */
     public function get_item_permissions_check($request)
     {
@@ -272,7 +276,7 @@ class AnyTermsRestController extends \WP_REST_Controller
             return new \WP_Error(
                 'rest_forbidden_context',
                 __('Sorry, you are not allowed to edit this term.'),
-                [ 'status' => rest_authorization_required_code() ]
+                [ 'status' => \rest_authorization_required_code() ]
             );
         }
 
@@ -306,7 +310,7 @@ class AnyTermsRestController extends \WP_REST_Controller
      *
      * @param WP_Term         $item    Term object.
      * @param WP_REST_Request $request Request object.
-     * @return WP_REST_Response $response Response object.
+     * @return WP_REST_Response Response object.
      */
     public function prepare_item_for_response($item, $request)
     {
@@ -551,7 +555,7 @@ class AnyTermsRestController extends \WP_REST_Controller
         ];
 
         /**
-         * Filter collection parameters for the terms controller.
+         * Filters collection parameters for the terms controller.
          *
          * The dynamic part of the filter `$this->taxonomy` refers to the taxonomy
          * slug for the controller.

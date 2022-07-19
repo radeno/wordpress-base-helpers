@@ -37,7 +37,7 @@ class AnyPostsRestController extends \WP_REST_Controller
     }
 
     /**
-     * Registers the routes for the objects of the controller.
+     * Registers the routes for posts.
      *
      * @since 4.7.0
      *
@@ -175,14 +175,32 @@ class AnyPostsRestController extends \WP_REST_Controller
         // Check for & assign any parameters which require special handling or setting.
         $args['date_query'] = [];
 
-        // Set before into date query. Date query must be specified as an array of an array.
         if (isset($registered['before'], $request['before'])) {
-            $args['date_query'][0]['before'] = $request['before'];
+            $args['date_query'][] = [
+                'before' => $request['before'],
+                'column' => 'post_date',
+            ];
         }
 
-        // Set after into date query. Date query must be specified as an array of an array.
+        if (isset($registered['modified_before'], $request['modified_before'])) {
+            $args['date_query'][] = [
+                'before' => $request['modified_before'],
+                'column' => 'post_modified',
+            ];
+        }
+
         if (isset($registered['after'], $request['after'])) {
-            $args['date_query'][0]['after'] = $request['after'];
+            $args['date_query'][] = [
+                'after'  => $request['after'],
+                'column' => 'post_date',
+            ];
+        }
+
+        if (isset($registered['modified_after'], $request['modified_after'])) {
+            $args['date_query'][] = [
+                'after'  => $request['modified_after'],
+                'column' => 'post_modified',
+            ];
         }
 
         // Ensure our per_page parameter overrides any provided posts_per_page filter.
@@ -374,7 +392,7 @@ class AnyPostsRestController extends \WP_REST_Controller
             return new \WP_Error(
                 'rest_forbidden_context',
                 __('Sorry, you are not allowed to edit this post.'),
-                [ 'status' => rest_authorization_required_code() ]
+                [ 'status' => \rest_authorization_required_code() ]
             );
         }
 
