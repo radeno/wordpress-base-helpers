@@ -1251,8 +1251,8 @@ class AnyPostsRestController extends \WP_REST_Controller
                     break;
 
                 case 'custom-fields':
-                    // $meta                         = new \WP_REST_Post_Meta_Fields('post');
-                    // $schema['properties']['meta'] = $meta->get_field_schema();
+                    $meta                         = new \WP_REST_Post_Meta_Fields('post');
+                    $schema['properties']['meta'] = $meta->get_field_schema();
                     break;
 
             }
