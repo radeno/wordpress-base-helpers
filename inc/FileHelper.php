@@ -23,7 +23,7 @@ class FileHelper
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_TCP_NODELAY, true);
-        curl_setopt($ch, CURLINFO_RESPONSE_CODE, true);
+        // $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
         $data = curl_exec($ch);
 
