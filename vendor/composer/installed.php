@@ -1,49 +1,47 @@
-<?php return array (
-  'root' => 
-  array (
-    'pretty_version' => '999',
-    'version' => '999.0.0.0',
-    'aliases' => 
-    array (
+<?php return array(
+    'root' => array(
+        'name' => 'radeno/wordpress-base-helpers',
+        'pretty_version' => '1.3.4',
+        'version' => '1.3.4.0',
+        'reference' => NULL,
+        'type' => 'wordpress-plugin',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => true,
     ),
-    'reference' => NULL,
-    'name' => 'radeno/wordpress-base-helpers',
-  ),
-  'versions' => 
-  array (
-    'giggsey/libphonenumber-for-php' => 
-    array (
-      'pretty_version' => '8.12.15',
-      'version' => '8.12.15.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'c1f328bface2745ff1a292639dd68cafc673a456',
+    'versions' => array(
+        'giggsey/libphonenumber-for-php' => array(
+            'pretty_version' => '8.13.6',
+            'version' => '8.13.6.0',
+            'reference' => '5631645d2ca28e4f62daea7baddcba8c90f4bcbf',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../giggsey/libphonenumber-for-php',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'giggsey/locale' => array(
+            'pretty_version' => '2.3',
+            'version' => '2.3.0.0',
+            'reference' => '5f035523740be40d40ac768a123c9bcc1ae12f56',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../giggsey/locale',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'radeno/wordpress-base-helpers' => array(
+            'pretty_version' => '1.3.4',
+            'version' => '1.3.4.0',
+            'reference' => NULL,
+            'type' => 'wordpress-plugin',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'symfony/polyfill-mbstring' => array(
+            'dev_requirement' => false,
+            'replaced' => array(
+                0 => '*',
+            ),
+        ),
     ),
-    'giggsey/locale' => 
-    array (
-      'pretty_version' => '1.9',
-      'version' => '1.9.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'b07f1eace8072ccc61445ad8fbd493ff9d783043',
-    ),
-    'radeno/wordpress-base-helpers' => 
-    array (
-      'pretty_version' => '999',
-      'version' => '999.0.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => NULL,
-    ),
-    'symfony/polyfill-mbstring' => 
-    array (
-      'replaced' => 
-      array (
-        0 => '*',
-      ),
-    ),
-  ),
 );
