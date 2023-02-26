@@ -13,9 +13,6 @@
     "php": ">=7.4",
     "giggsey/libphonenumber-for-php": "~8.13.6"
   },
-  "replace": {
-    "symfony/polyfill-mbstring": "*"
-  },
   "suggest": {
     "wordpress": "WP 5.3 and higher"
   }
