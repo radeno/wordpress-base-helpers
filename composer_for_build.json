@@ -9,6 +9,8 @@
     }
   ],
   "license": "MIT",
+  "optimize-autoloader": true,
+  "classmap-authoritative": true,
   "require": {
     "php": ">=7.4",
     "ext-mbstring": "*",
