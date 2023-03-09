@@ -88,4 +88,18 @@ class QueryHelper
 
         return $query->posts[0] ?? null;
     }
+
+    public static function isQueryPostType($needle, $haystack): bool
+    {
+        $normalizedNeedle = !is_array($needle) ? [$needle] : $needle;
+        $normalizedHaystack = !is_array($haystack) ? [$haystack] : $haystack;
+
+        foreach ($normalizedNeedle as $item) {
+            if (in_array($item, $normalizedHaystack)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
