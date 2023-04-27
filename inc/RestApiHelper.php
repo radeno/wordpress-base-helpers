@@ -38,7 +38,7 @@ class RestApiHelper
                 );
 
                 \add_filter(
-                    "rest_${postType}_query",
+                    "rest_{$postType}_query",
                     function (array $args, \WP_REST_Request $request) {
                         if (isset($request['modified_after']) && !isset($request['after'])) {
                             $args['date_query'][0]['after'] = $request['modified_after'];
