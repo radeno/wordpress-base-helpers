@@ -11,10 +11,9 @@
  */
 
 return array (
-  9955000 => 'Silknet',
+  995500 => 'Silknet',
   99550050 => 'MagtiCom',
-  99550055 => 'Silknet',
-  9955007 => 'MyPhone',
+  99550070 => 'MyPhone',
   9955050 => 'Silknet',
   9955055 => 'MagtiCom',
   995510 => 'Silknet',

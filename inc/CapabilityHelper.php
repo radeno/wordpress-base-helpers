@@ -49,6 +49,35 @@ class CapabilityHelper
         $role->add_cap('assign_' . $capabilityBase[0]);
     }
 
+    /**
+     *
+     * Creates capabilities for content types for specific role.
+     *
+     * @param  array  $postTypes [['POST_TYPE_SINGULAR', 'POST_TYPE_PLURAL]]
+     * @param  array  $taxonomies [['TAXONOMY_SINGULAR', 'TAXONOMY_PLURAL]]
+     * @param  array  $role 'administrator'
+     * @return array
+     *
+     */
+    public static function addContentTypesCapabilities(array $postTypes, array $taxonomies, string $role)
+    {
+        \add_action("admin_init", function() use($postTypes, $taxonomies, $role) {
+            foreach ($postTypes as $postType) {
+                \helper\CapabilityHelper::addPostTypeCapabilities(
+                    [$postType[0], $postType[1]],
+                    $role,
+                );
+            }
+
+            foreach ($taxonomies as $taxonomy) {
+                \helper\CapabilityHelper::addTaxonomyCapabilities(
+                    [$taxonomy[0], $taxonomy[1]],
+                    $role,
+                );
+            }
+        });
+    }
+
     public static function changeWPFormsCapability()
     {
         if (!\is_admin()) {

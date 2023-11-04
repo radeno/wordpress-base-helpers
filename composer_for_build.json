@@ -1,6 +1,6 @@
 {
   "name": "radeno/wordpress-base-helpers",
-  "version": "1.3.4",
+  "version": "1.3.8",
   "type": "wordpress-plugin",
   "authors": [
     {
@@ -9,8 +9,10 @@
     }
   ],
   "license": "MIT",
-  "optimize-autoloader": true,
-  "classmap-authoritative": true,
+  "config": {
+    "optimize-autoloader": true,
+    "classmap-authoritative": true
+  },
   "require": {
     "php": ">=7.4",
     "ext-mbstring": "*",
