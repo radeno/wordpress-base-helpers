@@ -1,6 +1,6 @@
 {
   "name": "radeno/wordpress-base-helpers",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "type": "wordpress-plugin",
   "authors": [
     {
@@ -14,10 +14,10 @@
     "classmap-authoritative": true
   },
   "require": {
-    "php": ">=7.4",
+    "php": ">=8.0",
     "ext-mbstring": "*"
   },
   "suggest": {
-    "wordpress": "WP 5.3 and higher"
+    "wordpress": "WP 6.0 and higher"
   }
 }

@@ -62,17 +62,21 @@ class RewriteHelper
         });
     }
 
-    public static function removeAttachmentRewrite()
+    public static function removeRewrite(string $rewriteString)
     {
-        \add_filter("rewrite_rules_array", function ($rules) {
+        \add_filter("rewrite_rules_array", function ($rules) use ($rewriteString) {
             foreach ($rules as $rule => $rewrite) {
-                if (strpos($rewrite, 'attachment=')) {
+                if (strpos($rewrite, $rewriteString)) {
                     unset($rules[$rule]);
                 }
             }
 
             return $rules;
         });
+    }
+    public static function removeAttachmentRewrite()
+    {
+        self::removeRewrite('attachment=');
     }
 
     public static function modifyRewriteArgs($prettyLink, $args)
@@ -146,6 +150,9 @@ class RewriteHelper
             function ($url, $term, $taxonomy) {
                 $taxonomyObject = \get_taxonomy($taxonomy);
                 $postTypeObject = \get_post_type_object($taxonomyObject->object_type[0]);
+                if ($postTypeObject->_builtin) {
+                    return $url;
+                }
                 $taxonomies = array_values(array_intersect($postTypeObject->taxonomies, \helper\TaxonomyHelper::getTaxonomies()));
 
                 return self::getPostTaxonomiesTermsLink($postTypeObject->name, $taxonomies, $term, $taxonomy);
