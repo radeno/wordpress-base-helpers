@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       C3W base helpers
  * Description:       Fundamental helpers
- * Version:           1.3.8
+ * Version:           1.4.0
  * Requires at least: 5.5
  * Requires PHP:      7.4
  * Text Domain:       base-helpers
@@ -10,7 +10,7 @@
 
 namespace helper;
 
-require_once  __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 require_once "inc/AdminHelper.php";
 require_once "inc/AttachmentHelper.php";

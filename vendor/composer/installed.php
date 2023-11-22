@@ -1,8 +1,8 @@
 <?php return array(
     'root' => array(
         'name' => 'radeno/wordpress-base-helpers',
-        'pretty_version' => '1.3.8',
-        'version' => '1.3.8.0',
+        'pretty_version' => '1.4.0',
+        'version' => '1.4.0.0',
         'reference' => NULL,
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'giggsey/libphonenumber-for-php' => array(
-            'pretty_version' => '8.13.24',
-            'version' => '8.13.24.0',
-            'reference' => '746ca6a565b9d4167c94c80824f43fa6fb463fd1',
+            'pretty_version' => '8.13.25',
+            'version' => '8.13.25.0',
+            'reference' => 'fe9c0b201941977b91b6b086c9551aff07a733ae',
             'type' => 'library',
             'install_path' => __DIR__ . '/../giggsey/libphonenumber-for-php',
             'aliases' => array(),
@@ -29,8 +29,8 @@
             'dev_requirement' => false,
         ),
         'radeno/wordpress-base-helpers' => array(
-            'pretty_version' => '1.3.8',
-            'version' => '1.3.8.0',
+            'pretty_version' => '1.4.0',
+            'version' => '1.4.0.0',
             'reference' => NULL,
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
