@@ -22,12 +22,12 @@ class RewriteHelper
 
     public static function addPostTaxonomiesRewrite($postType, $taxonomies)
     {
-        $postTypeObject    = \get_post_type_object($postType);
+        $postTypeObject = \get_post_type_object($postType);
         $taxonomiesObjects = array_map(function ($taxonomy) {
             return \get_taxonomy($taxonomy);
         }, $taxonomies);
 
-        $postTypeRewriteSlug          = $postTypeObject->rewrite['slug'];
+        $postTypeRewriteSlug = $postTypeObject->rewrite['slug'];
         $taxonomiesRewriteSlugsString = join('/', array_map(function ($taxonomy) {
             return $taxonomy->rewrite['slug'] . '/' . '(.+?)';
         }, $taxonomiesObjects));
@@ -37,12 +37,12 @@ class RewriteHelper
             return "{$taxonomy}=\$matches[{$_i}]";
         }, $taxonomies, array_keys($taxonomies)));
 
-        $regexPaged       = "{$postTypeRewriteSlug}/{$taxonomiesRewriteSlugsString}/page/([0-9]{1,})?$";
+        $regexPaged = "{$postTypeRewriteSlug}/{$taxonomiesRewriteSlugsString}/page/([0-9]{1,})?$";
         $matchesIncrement = count($taxonomies) + 1;
-        $redirectPaged    = "index.php?post_type={$postType}&{$taxonomiesRedirectString}&paged=\$matches[{$matchesIncrement}]";
+        $redirectPaged = "index.php?post_type={$postType}&{$taxonomiesRedirectString}&paged=\$matches[{$matchesIncrement}]";
         \add_rewrite_rule($regexPaged, $redirectPaged, 'top');
 
-        $regex    = "{$postTypeRewriteSlug}/{$taxonomiesRewriteSlugsString}/?$";
+        $regex = "{$postTypeRewriteSlug}/{$taxonomiesRewriteSlugsString}/?$";
         $redirect = "index.php?post_type={$postType}&{$taxonomiesRedirectString}";
         \add_rewrite_rule($regex, $redirect, 'top');
     }
@@ -62,11 +62,24 @@ class RewriteHelper
         });
     }
 
+    public static function removeAttachmentRewrite()
+    {
+        \add_filter("rewrite_rules_array", function ($rules) {
+            foreach ($rules as $rule => $rewrite) {
+                if (strpos($rewrite, 'attachment=')) {
+                    unset($rules[$rule]);
+                }
+            }
+
+            return $rules;
+        });
+    }
+
     public static function modifyRewriteArgs($prettyLink, $args)
     {
         $newRewrite = [
-            'slug'       => $prettyLink,
-            'with_front' => false
+            'slug' => $prettyLink,
+            'with_front' => false,
         ];
 
         if ($args['rewrite'] === true || $args['rewrite'] === 1) {
@@ -80,7 +93,7 @@ class RewriteHelper
 
     public static function getPostTaxonomiesTermsLink($postType, $taxonomies, $currentTerm, $currentTaxonomy)
     {
-        $postTypeObject    = \get_post_type_object($postType);
+        $postTypeObject = \get_post_type_object($postType);
         $taxonomiesObjects = array_map(function ($taxonomy) {
             return \get_taxonomy($taxonomy);
         }, $taxonomies);
@@ -131,10 +144,6 @@ class RewriteHelper
         \add_filter(
             'term_link',
             function ($url, $term, $taxonomy) {
-                if ($taxonomy != 'life_situation_category') {
-                    return $url;
-                }
-
                 $taxonomyObject = \get_taxonomy($taxonomy);
                 $postTypeObject = \get_post_type_object($taxonomyObject->object_type[0]);
                 $taxonomies = array_values(array_intersect($postTypeObject->taxonomies, \helper\TaxonomyHelper::getTaxonomies()));
