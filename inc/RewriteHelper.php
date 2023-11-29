@@ -144,22 +144,6 @@ class RewriteHelper
             10,
             3
         );
-
-        \add_filter(
-            'term_link',
-            function ($url, $term, $taxonomy) {
-                $taxonomyObject = \get_taxonomy($taxonomy);
-                $postTypeObject = \get_post_type_object($taxonomyObject->object_type[0]);
-                if ($postTypeObject->_builtin) {
-                    return $url;
-                }
-                $taxonomies = array_values(array_intersect($postTypeObject->taxonomies, \helper\TaxonomyHelper::getTaxonomies()));
-
-                return self::getPostTaxonomiesTermsLink($postTypeObject->name, $taxonomies, $term, $taxonomy);
-            },
-            20,
-            3
-        );
     }
 
     public static function removeDefaultDateRewritesFilter()
