@@ -39,7 +39,7 @@ class AdminHelper
         });
 
         \add_filter('ajax_query_attachments_args', function ($query = []) {
-            if (!\current_user_can('edit_others_posts' && empty($query['uploadedTo'])) && \get_current_screen()->parent_base == 'upload') {
+            if (!\current_user_can('edit_others_posts' && empty($query['uploadedTo'])) && \get_current_screen()?->parent_base == 'upload') {
                 $user_id = get_current_user_id();
                 if ($user_id) {
                     $query['author'] = $user_id;

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       C3W base helpers
  * Description:       Fundamental helpers
- * Version:           1.4.2
+ * Version:           1.4.3
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Text Domain:       base-helpers
