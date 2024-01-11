@@ -13,8 +13,6 @@ class SecurityHelper
         self::removeCommentsAction();
         self::removeArchiveFeedsAction();
         self::removeTrackbacksAction();
-        self::removeUserRestEndpoints();
-        self::removeUserRestFields();
         self::removeDefaultPostTypeSupportsAction();
     }
 
@@ -101,50 +99,6 @@ class SecurityHelper
             }
 
             return $rules;
-        });
-    }
-
-    public static function removeUserRestEndpoints()
-    {
-        \add_filter('rest_endpoints', function ($endpoints) {
-            if (isset($endpoints['/wp/v2/users'])) {
-                unset($endpoints['/wp/v2/users']);
-            }
-            if (isset($endpoints['/wp/v2/users/(?P<id>[\d]+)'])) {
-                unset($endpoints['/wp/v2/users/(?P<id>[\d]+)']);
-            }
-            return $endpoints;
-        });
-    }
-
-    public static function removeUserRestFields()
-    {
-        \add_action('rest_api_init', function () {
-            foreach (PostTypeHelper::getAllPostTypes() as $postType) {
-                \add_filter("rest_prepare_{$postType}", function (
-                    \WP_REST_Response $response
-                ) {
-                    $response->remove_link('author');
-                    unset($response->data['author']);
-                    unset($response->data['guid']);
-
-                    return $response;
-                });
-
-                \add_filter(
-                    "rest_{$postType}_collection_params",
-                    function (array $query_params, \WP_Post_Type $post_type) {
-                        unset($query_params['author']);
-                        unset($query_params['author_exclude']);
-                        unset($query_params['author_exclude']);
-                        unset($query_params['orderby']['enum'][0]);
-
-                        return $query_params;
-                    },
-                    10,
-                    2
-                );
-            }
         });
     }
 
