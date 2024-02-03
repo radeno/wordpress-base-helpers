@@ -10,7 +10,6 @@ class SecurityHelper
     {
         self::removeOthers();
         self::disableEmojis();
-        self::removeCommentsAction();
         self::removeArchiveFeedsAction();
         self::removeTrackbacksAction();
         self::removeDefaultPostTypeSupportsAction();
@@ -74,19 +73,6 @@ class SecurityHelper
         });
 
         \remove_action('wp_head', 'feed_links_extra', 3); // Display the links to the extra feeds such as category feeds
-    }
-
-    public static function removeCommentsAction()
-    {
-        \add_filter('rewrite_rules_array', function ($rules) {
-            foreach ($rules as $rule => $rewrite) {
-                if (preg_match('/^.*\/comment-page/', $rule)) {
-                    unset($rules[$rule]);
-                }
-            }
-
-            return $rules;
-        });
     }
 
     public static function removeTrackbacksAction()
