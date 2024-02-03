@@ -19,6 +19,7 @@ require_once "inc/CapabilityHelper.php";
 require_once "inc/DateTimeHelper.php";
 require_once "inc/FileHelper.php";
 require_once "inc/FormatterHelper.php";
+require_once "inc/HookHelper.php";
 require_once "inc/LocaleHelper.php";
 require_once "inc/MenuHelper.php";
 require_once "inc/QueryHelper.php";
