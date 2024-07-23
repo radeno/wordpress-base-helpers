@@ -39,6 +39,14 @@ class AttachmentHelper
         // );
     }
 
+    public static function getMimeTypesByExtensions(array $extensions)
+    {
+        return array_intersect_key(
+            self::getMimeTypes(),
+            array_flip($extensions)
+        );
+    }
+
     public static function changeUploadsUrlToCdnFilter($originalUrl, $newUrl)
     {
         $replaceUrl = function ($url) use ($originalUrl, $newUrl) {

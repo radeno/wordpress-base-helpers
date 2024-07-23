@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       C3W base helpers
  * Description:       Fundamental helpers
- * Version:           1.4.5
+ * Version:           1.4.6
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Text Domain:       base-helpers
@@ -35,7 +35,6 @@ CacheHelper::initActionsAndFilters();
 CapabilityHelper::initActionsAndFilters();
 MenuHelper::initActionsAndFilters();
 QueryHelper::initActionsAndFilters();
-FileHelper::initActionsAndFilters();
 RestApiHelper::initActionsAndFilters();
 RewriteHelper::initActionsAndFilters();
 SecurityHelper::initActionsAndFilters();

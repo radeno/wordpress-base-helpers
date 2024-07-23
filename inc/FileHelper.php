@@ -4,21 +4,6 @@ namespace helper;
 
 class FileHelper
 {
-    public static function initActionsAndFilters()
-    {
-        self::addAllowedContentTypes();
-    }
-
-    public static function addAllowedContentTypes()
-    {
-        \add_filter('upload_mimes', function ($contentTypes) {
-            $contentTypes['xml'] = 'application/xml';
-            $contentTypes['asice'] = 'application/vnd. etsi.asic-e+zip';
-
-            return $contentTypes;
-        });
-    }
-
     /**
      * @param $url
      * @return false|string
