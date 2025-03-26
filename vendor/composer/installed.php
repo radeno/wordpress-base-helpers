@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'radeno/wordpress-base-helpers',
-        'pretty_version' => '1.4.1',
-        'version' => '1.4.1.0',
-        'reference' => NULL,
+        'pretty_version' => '1.4.9',
+        'version' => '1.4.9.0',
+        'reference' => null,
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
