@@ -14,9 +14,9 @@
     "classmap-authoritative": true
   },
   "require": {
-    "php": ">=8.0",
+    "php": ">=8.1",
     "ext-mbstring": "*",
-    "giggsey/libphonenumber-for-php": "~8.13.6"
+    "giggsey/libphonenumber-for-php": "~8.13.55"
   },
   "replace": {
     "symfony/polyfill-mbstring": "*"
