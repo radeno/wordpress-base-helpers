@@ -1,8 +1,8 @@
 <?php return array(
     'root' => array(
         'name' => 'radeno/wordpress-base-helpers',
-        'pretty_version' => '1.4.9',
-        'version' => '1.4.9.0',
+        'pretty_version' => '1.4.7',
+        'version' => '1.4.7.0',
         'reference' => null,
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
@@ -35,8 +35,8 @@
             'dev_requirement' => false,
         ),
         'radeno/wordpress-base-helpers' => array(
-            'pretty_version' => '1.4.9',
-            'version' => '1.4.9.0',
+            'pretty_version' => '1.4.7',
+            'version' => '1.4.7.0',
             'reference' => null,
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
