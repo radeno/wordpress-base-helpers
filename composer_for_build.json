@@ -14,7 +14,7 @@
     "classmap-authoritative": true
   },
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.2",
     "ext-mbstring": "*",
     "giggsey/libphonenumber-for-php": "~8.13.55"
   },
@@ -22,6 +22,6 @@
     "symfony/polyfill-mbstring": "*"
   },
   "suggest": {
-    "wordpress": "WP 6.0 and higher"
+    "wordpress": "WP 6.7 and higher"
   }
 }

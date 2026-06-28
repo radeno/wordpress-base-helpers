@@ -62,12 +62,14 @@ class RestApiHelper
                     return null;
                 }
 
-                foreach ($img['sizes'] as $size => $meta) {
-                    $attachmentImageSrc = \wp_get_attachment_image_src(
-                        $object['featured_media'],
-                        $size
-                    );
-                    $img['sizes'][$size]['source_url'] = $attachmentImageSrc[0] ?? null;
+                if (!empty($img['sizes'])) {
+                    foreach ($img['sizes'] as $size => $meta) {
+                        $attachmentImageSrc = \wp_get_attachment_image_src(
+                            $object['featured_media'],
+                            $size
+                        );
+                        $img['sizes'][$size]['source_url'] = $attachmentImageSrc[0] ?? null;
+                    }
                 }
 
                 if (isset($img['url'])) {

@@ -29,8 +29,7 @@ class QueryHelper
         $whereExtension = function (string $where, \WP_Query $wp_query) {
             if (isset($wp_query->query['post_content_like'])) {
                 global $wpdb;
-                $whereContent = str_replace("'", "\\'", $wp_query->query['post_content_like']);
-                $where .= " AND {$wpdb->posts}.post_content LIKE '{$whereContent}' ";
+                $where .= $wpdb->prepare(" AND {$wpdb->posts}.post_content LIKE %s ", $wp_query->query['post_content_like']);
             }
 
             return $where;
@@ -55,7 +54,12 @@ class QueryHelper
 
     public static function getAllPostsIds(string $postType, array $queryArgs = [])
     {
-        return self::getAllPosts($postType, array_merge(['fields' => 'ids'], $queryArgs));
+        return self::getAllPosts($postType, array_merge([
+            'fields'                 => 'ids',
+            'no_found_rows'          => true,
+            'update_post_meta_cache' => false,
+            'update_post_term_cache' => false,
+        ], $queryArgs));
     }
 
     public static function getPostsByIds($ids, $queryArgs = [])

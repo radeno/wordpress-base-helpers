@@ -14,10 +14,10 @@
     "classmap-authoritative": true
   },
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.2",
     "ext-mbstring": "*"
   },
   "suggest": {
-    "wordpress": "WP 6.0 and higher"
+    "wordpress": "WP 6.7 and higher"
   }
 }

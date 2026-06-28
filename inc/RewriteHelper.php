@@ -66,7 +66,7 @@ class RewriteHelper
     {
         \add_filter("rewrite_rules_array", function ($rules) use ($rewriteString) {
             foreach ($rules as $rule => $rewrite) {
-                if (strpos($rewrite, $rewriteString)) {
+                if (strpos($rewrite, $rewriteString) !== false) {
                     unset($rules[$rule]);
                 }
             }
