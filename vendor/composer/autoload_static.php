@@ -4,25 +4,25 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitfef98ddbe7b03a491e9199dd34e0980e
+class ComposerStaticInit8158a739e1d5aa45270246e05b9d3133
 {
     public static $prefixLengthsPsr4 = array (
-        'l' => 
+        'l' =>
         array (
             'libphonenumber\\' => 15,
         ),
-        'G' => 
+        'G' =>
         array (
             'Giggsey\\Locale\\' => 15,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'libphonenumber\\' => 
+        'libphonenumber\\' =>
         array (
             0 => __DIR__ . '/..' . '/giggsey/libphonenumber-for-php/src',
         ),
-        'Giggsey\\Locale\\' => 
+        'Giggsey\\Locale\\' =>
         array (
             0 => __DIR__ . '/..' . '/giggsey/locale/src',
         ),
@@ -76,9 +76,9 @@ class ComposerStaticInitfef98ddbe7b03a491e9199dd34e0980e
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitfef98ddbe7b03a491e9199dd34e0980e::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitfef98ddbe7b03a491e9199dd34e0980e::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitfef98ddbe7b03a491e9199dd34e0980e::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit8158a739e1d5aa45270246e05b9d3133::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit8158a739e1d5aa45270246e05b9d3133::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit8158a739e1d5aa45270246e05b9d3133::$classMap;
 
         }, null, ClassLoader::class);
     }

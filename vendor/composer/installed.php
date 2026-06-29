@@ -7,7 +7,7 @@
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'dev' => true,
+        'dev' => false,
     ),
     'versions' => array(
         'giggsey/libphonenumber-for-php' => array(
@@ -26,9 +26,9 @@
             ),
         ),
         'giggsey/locale' => array(
-            'pretty_version' => '2.8.0',
-            'version' => '2.8.0.0',
-            'reference' => '1cd8b3ad2d43e04f4c2c6a240495af44780f809b',
+            'pretty_version' => '2.9.0',
+            'version' => '2.9.0.0',
+            'reference' => 'fe741e99ae6ccbe8132f3d63d8ec89924e689778',
             'type' => 'library',
             'install_path' => __DIR__ . '/../giggsey/locale',
             'aliases' => array(),
@@ -44,6 +44,12 @@
             'dev_requirement' => false,
         ),
         'symfony/polyfill-mbstring' => array(
+            'dev_requirement' => false,
+            'replaced' => array(
+                0 => '*',
+            ),
+        ),
+        'symfony/polyfill-php80' => array(
             'dev_requirement' => false,
             'replaced' => array(
                 0 => '*',

@@ -1,0 +1,28 @@
+# Static analysis of the REST controllers against real WordPress signatures
+# (php-stubs/wordpress-stubs) — no WordPress install needed.
+#
+#   composer install            # pulls require-dev (phpstan + stubs)
+#   vendor/bin/phpstan analyse --memory-limit=1G
+#   composer install --no-dev   # restore the prod-only vendor before committing
+
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - inc/AnyPostsRestController.php
+        - inc/AnyTermsRestController.php
+    scanDirectories:
+        - inc
+    bootstrapFiles:
+        - vendor/autoload.php
+
+    # AnyPostsRestController / AnyTermsRestController are faithful copies of
+    # core's controllers (global namespace) placed under `namespace helper`, so
+    # their copied PHPDoc resolves WP_* types to helper\WP_*. We do not edit the
+    # controllers to satisfy the analyser, so that name-resolution noise is
+    # filtered here in the config (not in source).
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        - '#helper\\WP_#'

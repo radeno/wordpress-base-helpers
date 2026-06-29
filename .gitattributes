@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Keep dev-only files out of the distributed package. Composer's dist install
+# (GitHub archive) runs `git archive`, which honours export-ignore. These files
+# stay in the repo but are absent from what consumers download.
+/phpstan.neon.dist  export-ignore
+/.gitignore         export-ignore
+/.gitattributes     export-ignore

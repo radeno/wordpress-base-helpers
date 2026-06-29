@@ -15,7 +15,16 @@
   },
   "require": {
     "php": ">=8.2",
-    "ext-mbstring": "*"
+    "ext-mbstring": "*",
+    "giggsey/libphonenumber-for-php": "~8.13.55"
+  },
+  "replace": {
+    "symfony/polyfill-mbstring": "*",
+    "symfony/polyfill-php80": "*"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.1",
+    "szepeviktor/phpstan-wordpress": "^2.0"
   },
   "suggest": {
     "wordpress": "WP 6.7 and higher"
