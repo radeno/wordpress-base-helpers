@@ -5,32 +5,17 @@ namespace helper;
 require_once "PostTypeHelper.php";
 require_once "TaxonomyHelper.php";
 
-if (!function_exists("rest_is_field_included")) {
-    function rest_is_field_included($field, $fields)
-    {
-        if (in_array($field, $fields, true)) {
-            return true;
-        }
-        foreach ($fields as $accepted_field) {
-            // Check to see if $field is the parent of any item in $fields.
-            // A field "parent" should be accepted if "parent.child" is accepted.
-            if (strpos($accepted_field, "$field.") === 0) {
-                return true;
-            }
-            // Conversely, if "parent" is accepted, all "parent.child" fields should
-            // also be accepted.
-            if (strpos($field, "$accepted_field.") === 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-}
-
-class AnyPostsRestController extends \WP_REST_Controller
+class AnyPostsRestController extends \WP_REST_Posts_Controller
 {
+    /** @var string[] Post types exposed by this controller. */
+    protected array $post_types;
+
     public function __construct()
     {
+        // 'post' is a representative real type so inherited core methods that
+        // dereference get_post_type_object($this->post_type) keep working.
+        parent::__construct('post');
+
         $this->post_types = array_values(PostTypeHelper::getAllRestPostTypes());
         $this->namespace  = 'sc/v1';
         $this->rest_base  = 'any_posts';
@@ -240,7 +225,13 @@ class AnyPostsRestController extends \WP_REST_Controller
         }
 
         // Force the post_type argument, since it's not a user input variable.
-        $args['post_type'] = $request['type'] ?? !empty($request['except_type']) ? array_diff($this->post_types, (array)$request['except_type']) : $this->post_types;
+        if (!empty($request['type'])) {
+            $args['post_type'] = $request['type'];
+        } elseif (!empty($request['except_type'])) {
+            $args['post_type'] = array_diff($this->post_types, (array) $request['except_type']);
+        } else {
+            $args['post_type'] = $this->post_types;
+        }
 
         /**
          * Filters the query arguments for a request.
@@ -417,179 +408,6 @@ class AnyPostsRestController extends \WP_REST_Controller
         }
 
         return true;
-    }
-
-    public function can_access_password_content($post, $request)
-    {
-        if (empty($post->post_password)) {
-            // No filter required.
-            return false;
-        }
-
-        // Edit context always gets access to password-protected posts.
-        if ('edit' === $request['context']) {
-            return true;
-        }
-
-        // No password, no auth.
-        if (empty($request['password'])) {
-            return false;
-        }
-
-        // Double-check the request password.
-        return hash_equals($post->post_password, $request['password']);
-    }
-
-    public function get_item($request)
-    {
-        $post = $this->get_post($request['id']);
-        if (\is_wp_error($post)) {
-            return $post;
-        }
-
-        $data     = $this->prepare_item_for_response($post, $request);
-        $response = \rest_ensure_response($data);
-
-        $response->link_header('alternate', \get_permalink($post->ID), [ 'type' => 'text/html' ]);
-
-        return $response;
-    }
-
-    /**
-     * Determines the allowed query_vars for a get_items() response and prepares
-     * them for WP_Query.
-     *
-     * @since 4.7.0
-     *
-     * @param array           $prepared_args Optional. Prepared WP_Query arguments. Default empty array.
-     * @param WP_REST_Request $request       Optional. Full details about the request.
-     * @return array Items query arguments.
-     */
-    protected function prepare_items_query($prepared_args = [], $request = null)
-    {
-        $query_args = [];
-
-        foreach ($prepared_args as $key => $value) {
-            /**
-             * Filters the query_vars used in get_items() for the constructed query.
-             *
-             * The dynamic portion of the hook name, `$key`, refers to the query_var key.
-             *
-             * @since 4.7.0
-             *
-             * @param string $value The query_var value.
-             */
-            $query_args[ $key ] = \apply_filters("rest_query_var-{$key}", $value); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
-        }
-
-        $query_args['ignore_sticky_posts'] = true;
-
-        // Map to proper WP_Query orderby param.
-        if (isset($query_args['orderby']) && isset($request['orderby'])) {
-            $orderby_mappings = [
-                'id'            => 'ID',
-                'include'       => 'post__in',
-                'slug'          => 'post_name',
-                'include_slugs' => 'post_name__in',
-            ];
-
-            if (isset($orderby_mappings[ $request['orderby'] ])) {
-                $query_args['orderby'] = $orderby_mappings[ $request['orderby'] ];
-            }
-        }
-
-        return $query_args;
-    }
-
-    /**
-     * Checks the post_date_gmt or modified_gmt and prepare any post or
-     * modified date for single post output.
-     *
-     * @since 4.7.0
-     *
-     * @param string      $date_gmt GMT publication time.
-     * @param string|null $date     Optional. Local publication time. Default null.
-     * @return string|null ISO8601/RFC3339 formatted datetime.
-     */
-    protected function prepare_date_response($date_gmt, $date = null)
-    {
-        // Use the date if passed.
-        if (isset($date)) {
-            return \mysql_to_rfc3339($date);
-        }
-
-        // Return null if $date_gmt is empty/zeros.
-        if ('0000-00-00 00:00:00' === $date_gmt) {
-            return null;
-        }
-
-        // Return the formatted datetime.
-        return \mysql_to_rfc3339($date_gmt);
-    }
-
-    /**
-     * Determines validity and normalizes the given status parameter.
-     *
-     * @since 4.7.0
-     *
-     * @param string       $post_status Post status.
-     * @param WP_Post_Type $post_type   Post type.
-     * @return string|WP_Error Post status or WP_Error if lacking the proper permission.
-     */
-    protected function handle_status_param($post_status, $post_type)
-    {
-        switch ($post_status) {
-            case 'draft':
-            case 'pending':
-                break;
-            case 'private':
-                if (! \current_user_can($post_type->cap->publish_posts)) {
-                    return new \WP_Error(
-                        'rest_cannot_publish',
-                        __('Sorry, you are not allowed to create private posts in this post type.'),
-                        [ 'status' => rest_authorization_required_code() ]
-                    );
-                }
-                break;
-            case 'publish':
-            case 'future':
-                if (! \current_user_can($post_type->cap->publish_posts)) {
-                    return new \WP_Error(
-                        'rest_cannot_publish',
-                        __('Sorry, you are not allowed to publish posts in this post type.'),
-                        [ 'status' => rest_authorization_required_code() ]
-                    );
-                }
-                break;
-            default:
-                if (! \get_post_status_object($post_status)) {
-                    $post_status = 'draft';
-                }
-                break;
-        }
-
-        return $post_status;
-    }
-
-    /**
-     * Checks if a given post type can be viewed or managed.
-     *
-     * @since 4.7.0
-     *
-     * @param WP_Post_Type|string $post_type Post type name or object.
-     * @return bool Whether the post type is allowed in REST.
-     */
-    protected function check_is_post_type_allowed($post_type)
-    {
-        if (! is_object($post_type)) {
-            $post_type = \get_post_type_object($post_type);
-        }
-
-        if (! empty($post_type) && ! empty($post_type->show_in_rest)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -916,22 +734,6 @@ class AnyPostsRestController extends \WP_REST_Controller
          * @param WP_REST_Request  $request  Request object.
          */
         return \apply_filters("rest_prepare_{$post->post_type}", $response, $post, $request);
-    }
-
-    /**
-     * Overwrites the default protected title format.
-     *
-     * By default, WordPress will show password protected posts with a title of
-     * "Protected: %s", as the REST API communicates the protected status of a post
-     * in a machine readable format, we remove the "Protected: " prefix.
-     *
-     * @since 4.7.0
-     *
-     * @return string Protected title format.
-     */
-    public function protected_title_format()
-    {
-        return '%s';
     }
 
     /**
@@ -1303,137 +1105,54 @@ class AnyPostsRestController extends \WP_REST_Controller
     {
         $query_params = parent::get_collection_params();
 
-        $query_params['context']['default'] = 'view';
-
+        // Multi-type selectors (specific to this aggregate controller). All the
+        // standard post params — author, dates, order/orderby, status, sticky,
+        // search and search_columns (WP 6.1+) — come from the parent verbatim.
         $query_params['type'] = [
-            'description' => __('Post types'),
+            'description' => __('Limit results to one or more post types.'),
             'type'        => 'array',
-            'items'       => [
-                'type' => 'string',
-            ],
-            'default' => $this->post_types,
+            'items'       => [ 'type' => 'string', 'enum' => $this->post_types ],
+            'default'     => $this->post_types,
         ];
 
-        $query_params['after'] = [
-            'description' => __('Limit response to posts published after a given ISO8601 compliant date.'),
-            'type'        => 'string',
-            'format'      => 'date-time',
-        ];
-
-        $query_params['author'] = [
-            'description' => __('Limit result set to posts assigned to specific authors.'),
+        $query_params['except_type'] = [
+            'description' => __('Exclude one or more post types from the results.'),
             'type'        => 'array',
-            'items'       => [
-                'type' => 'integer',
-            ],
-            'default' => [],
-        ];
-        $query_params['author_exclude'] = [
-            'description' => __('Ensure result set excludes posts assigned to specific authors.'),
-            'type'        => 'array',
-            'items'       => [
-                'type' => 'integer',
-            ],
-            'default' => [],
+            'items'       => [ 'type' => 'string', 'enum' => $this->post_types ],
+            'default'     => [],
         ];
 
-        $query_params['before'] = [
-            'description' => __('Limit response to posts published before a given ISO8601 compliant date.'),
-            'type'        => 'string',
-            'format'      => 'date-time',
-        ];
-
-        $query_params['exclude'] = [
-            'description' => __('Ensure result set excludes specific IDs.'),
-            'type'        => 'array',
-            'items'       => [
-                'type' => 'integer',
-            ],
-            'default' => [],
-        ];
-
-        $query_params['include'] = [
-            'description' => __('Limit result set to specific IDs.'),
-            'type'        => 'array',
-            'items'       => [
-                'type' => 'integer',
-            ],
-            'default' => [],
-        ];
-
+        // The representative 'post' type lacks page-attributes, so re-add
+        // menu_order filtering/ordering, which is meaningful across the set.
         $query_params['menu_order'] = [
-                'description' => __('Limit result set to posts with a specific menu_order value.'),
-                'type'        => 'integer',
-            ];
-
-        $query_params['offset'] = [
-            'description' => __('Offset the result set by a specific number of items.'),
+            'description' => __('Limit result set to posts with a specific menu_order value.'),
             'type'        => 'integer',
         ];
+        if (! in_array('menu_order', $query_params['orderby']['enum'], true)) {
+            $query_params['orderby']['enum'][] = 'menu_order';
+        }
 
-        $query_params['order'] = [
-            'description' => __('Order sort attribute ascending or descending.'),
-            'type'        => 'string',
-            'default'     => 'desc',
-            'enum'        => [ 'asc', 'desc' ],
-        ];
+        // 'post' is not hierarchical, so the parent omits parent filters; the
+        // aggregate spans hierarchical types (e.g. page), so re-add them.
+        if (! isset($query_params['parent'])) {
+            $query_params['parent'] = [
+                'description' => __('Limit result set to items with particular parent IDs.'),
+                'type'        => 'array',
+                'items'       => [ 'type' => 'integer' ],
+                'default'     => [],
+            ];
+        }
+        if (! isset($query_params['parent_exclude'])) {
+            $query_params['parent_exclude'] = [
+                'description' => __('Limit result set to all items except those of a particular parent ID.'),
+                'type'        => 'array',
+                'items'       => [ 'type' => 'integer' ],
+                'default'     => [],
+            ];
+        }
 
-        $query_params['orderby'] = [
-            'description' => __('Sort collection by object attribute.'),
-            'type'        => 'string',
-            'default'     => 'date',
-            'enum'        => [
-                'author',
-                'date',
-                'id',
-                'include',
-                'modified',
-                'parent',
-                'relevance',
-                'slug',
-                'include_slugs',
-                'title',
-            ],
-        ];
-
-        $query_params['orderby']['enum'][] = 'menu_order';
-
-        $query_params['parent'] = [
-            'description' => __('Limit result set to items with particular parent IDs.'),
-            'type'        => 'array',
-            'items'       => [
-                'type' => 'integer',
-            ],
-            'default' => [],
-        ];
-        $query_params['parent_exclude'] = [
-            'description' => __('Limit result set to all items except those of a particular parent ID.'),
-            'type'        => 'array',
-            'items'       => [
-                'type' => 'integer',
-            ],
-            'default' => [],
-        ];
-
-        $query_params['slug'] = [
-            'description' => __('Limit result set to posts with one or more specific slugs.'),
-            'type'        => 'array',
-            'items'       => [
-                'type' => 'string',
-            ],
-            'sanitize_callback' => 'wp_parse_slug_list',
-        ];
-
-        $query_params['status'] = [
-            'default'     => 'publish',
-            'description' => __('Limit result set to posts assigned one or more statuses.'),
-            'type'        => 'array',
-            'items'       => [
-                'enum' => array_merge(array_keys(\get_post_stati()), [ 'any' ]),
-                'type' => 'string',
-            ]
-        ];
-
+        // The parent only registers the representative type's taxonomies; add
+        // term filters for every REST taxonomy so any type can be filtered.
         $taxonomies = TaxonomyHelper::getAllRestTaxonomies('objects');
 
         if (! empty($taxonomies)) {
@@ -1468,25 +1187,11 @@ class AnyPostsRestController extends \WP_REST_Controller
             ];
         }
 
-        $query_params['sticky'] = [
-            'description' => __('Limit result set to items that are sticky.'),
-            'type'        => 'boolean',
-        ];
-
         /**
-         * Filter collection parameters for the posts controller.
+         * Filter collection parameters for the any-posts controller.
          *
-         * The dynamic part of the filter `$this->post_type` refers to the post
-         * type slug for the controller.
-         *
-         * This filter registers the collection parameter, but does not map the
-         * collection parameter to an internal WP_Query parameter. Use the
-         * `rest_{$this->post_type}_query` filter to set WP_Query parameters.
-         *
-         * @since 4.7.0
-         *
-         * @param array        $query_params JSON Schema-formatted collection parameters.
-         * @param WP_Post_Type $post_type    Post type object.
+         * @param array    $query_params JSON Schema-formatted collection parameters.
+         * @param string[] $post_types   Post types handled by the controller.
          */
         return \apply_filters("rest_any_post_collection_params", $query_params, $this->post_types);
     }

@@ -5,10 +5,17 @@ namespace helper;
 require_once "PostTypeHelper.php";
 require_once "TaxonomyHelper.php";
 
-class AnyTermsRestController extends \WP_REST_Controller
+class AnyTermsRestController extends \WP_REST_Terms_Controller
 {
+    /** @var string[] Taxonomies exposed by this controller. */
+    protected array $taxonomies;
+
     public function __construct()
     {
+        // 'category' is a representative real taxonomy so inherited core methods
+        // that dereference get_taxonomy($this->taxonomy) keep working.
+        parent::__construct('category');
+
         $this->taxonomies = array_values(TaxonomyHelper::getAllRestTaxonomies());
         $this->namespace  = 'sc/v1';
         $this->rest_base  = 'any_terms';
@@ -106,7 +113,14 @@ class AnyTermsRestController extends \WP_REST_Controller
             'type'       => 'taxonomy',
         ];
 
-        $prepared_args = $request['type'] ?? !empty($request['except_type']) ? array_diff($this->taxonomies, (array)$request['except_type']) : $this->taxonomies;
+        $prepared_args = [];
+        if (!empty($request['type'])) {
+            $prepared_args['taxonomy'] = $request['type'];
+        } elseif (!empty($request['except_type'])) {
+            $prepared_args['taxonomy'] = array_diff($this->taxonomies, (array) $request['except_type']);
+        } else {
+            $prepared_args['taxonomy'] = $this->taxonomies;
+        }
 
         /*
          * For each known parameter which is both registered and present in the request,
@@ -254,53 +268,6 @@ class AnyTermsRestController extends \WP_REST_Controller
         }
 
         return $term;
-    }
-
-    /**
-     * Checks if a request has access to read or edit the specified term.
-     *
-     * @since 4.7.0
-     *
-     * @param WP_REST_Request $request Full details about the request.
-     * @return true|WP_Error True if the request has read access for the item, otherwise false or WP_Error object.
-     */
-    public function get_item_permissions_check($request)
-    {
-        $term = $this->get_term($request['id']);
-
-        if (\is_wp_error($term)) {
-            return $term;
-        }
-
-        if ('edit' === $request['context'] && ! \current_user_can('edit_term', $term->term_id)) {
-            return new \WP_Error(
-                'rest_forbidden_context',
-                __('Sorry, you are not allowed to edit this term.'),
-                [ 'status' => \rest_authorization_required_code() ]
-            );
-        }
-
-        return true;
-    }
-
-    /**
-     * Gets a single term from a taxonomy.
-     *
-     * @since 4.7.0
-     *
-     * @param WP_REST_Request $request Full details about the request.
-     * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
-     */
-    public function get_item($request)
-    {
-        $term = $this->get_term($request['id']);
-        if (\is_wp_error($term)) {
-            return $term;
-        }
-
-        $response = $this->prepare_item_for_response($term, $request);
-
-        return \rest_ensure_response($response);
     }
 
     /**
@@ -467,107 +434,40 @@ class AnyTermsRestController extends \WP_REST_Controller
      */
     public function get_collection_params()
     {
+        // Parent (WP_REST_Terms_Controller) supplies the full term collection
+        // params for the representative 'category' taxonomy — context, exclude,
+        // include, order, orderby, hide_empty, parent, post, slug. We only add
+        // the multi-taxonomy selectors on top.
         $query_params = parent::get_collection_params();
 
         $query_params['type'] = [
-            'description' => __('Taxonomy types'),
+            'description' => __('Limit results to one or more taxonomies.'),
             'type'        => 'array',
-            'items'       => [
-                'type' => 'string',
-            ],
-            'default' => $this->taxonomies,
+            'items'       => [ 'type' => 'string', 'enum' => $this->taxonomies ],
+            'default'     => $this->taxonomies,
         ];
 
-        $query_params['context']['default'] = 'view';
-
-        $query_params['exclude'] = [
-            'description' => __('Ensure result set excludes specific IDs.'),
+        $query_params['except_type'] = [
+            'description' => __('Exclude one or more taxonomies from the results.'),
             'type'        => 'array',
-            'items'       => [
-                'type' => 'integer',
-            ],
-            'default' => [],
+            'items'       => [ 'type' => 'string', 'enum' => $this->taxonomies ],
+            'default'     => [],
         ];
 
-        $query_params['include'] = [
-            'description' => __('Limit result set to specific IDs.'),
-            'type'        => 'array',
-            'items'       => [
-                'type' => 'integer',
-            ],
-            'default' => [],
-        ];
-
-        $query_params['offset'] = [
-            'description' => __('Offset the result set by a specific number of items.'),
-            'type'        => 'integer',
-        ];
-
-        $query_params['order'] = [
-            'description' => __('Order sort attribute ascending or descending.'),
-            'type'        => 'string',
-            'default'     => 'asc',
-            'enum'        => [
-                'asc',
-                'desc',
-            ],
-        ];
-
-        $query_params['orderby'] = [
-            'description' => __('Sort collection by term attribute.'),
-            'type'        => 'string',
-            'default'     => 'name',
-            'enum'        => [
-                'id',
-                'include',
-                'name',
-                'slug',
-                'include_slugs',
-                'term_group',
-                'description',
-                'count',
-            ],
-        ];
-
-        $query_params['hide_empty'] = [
-            'description' => __('Whether to hide terms not assigned to any posts.'),
-            'type'        => 'boolean',
-            'default'     => false,
-        ];
-
-        $query_params['parent'] = [
-            'description' => __('Limit result set to terms assigned to a specific parent.'),
-            'type'        => 'integer',
-        ];
-
-        $query_params['post'] = [
-            'description' => __('Limit result set to terms assigned to a specific post.'),
-            'type'        => 'integer',
-            'default'     => null,
-        ];
-
-        $query_params['slug'] = [
-            'description' => __('Limit result set to terms with one or more specific slugs.'),
-            'type'        => 'array',
-            'items'       => [
-                'type' => 'string',
-            ],
-        ];
+        // 'category' is hierarchical, so the parent omits offset; re-add it since
+        // the aggregated set also spans non-hierarchical taxonomies.
+        if (! isset($query_params['offset'])) {
+            $query_params['offset'] = [
+                'description' => __('Offset the result set by a specific number of items.'),
+                'type'        => 'integer',
+            ];
+        }
 
         /**
-         * Filters collection parameters for the terms controller.
+         * Filters collection parameters for the any-terms controller.
          *
-         * The dynamic part of the filter `$this->taxonomy` refers to the taxonomy
-         * slug for the controller.
-         *
-         * This filter registers the collection parameter, but does not map the
-         * collection parameter to an internal WP_Term_Query parameter.  Use the
-         * `rest_{$this->taxonomy}_query` filter to set WP_Term_Query parameters.
-         *
-         * @since 4.7.0
-         *
-         * @param array       $query_params JSON Schema-formatted collection parameters.
-         * @param WP_Taxonomy $taxonomy     Taxonomy object.
+         * @param array    $query_params JSON Schema-formatted collection parameters.
+         * @param string[] $taxonomies   Taxonomies handled by the controller.
          */
         return \apply_filters("rest_any_term_collection_params", $query_params, $this->taxonomies);
     }
