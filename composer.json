@@ -22,6 +22,11 @@
     "symfony/polyfill-mbstring": "*",
     "symfony/polyfill-php80": "*"
   },
+  "autoload": {
+    "psr-4": {
+      "helper\\": "inc/"
+    }
+  },
   "require-dev": {
     "phpstan/phpstan": "^2.1",
     "szepeviktor/phpstan-wordpress": "^2.0"

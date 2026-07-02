@@ -7,5 +7,6 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'libphonenumber\\' => array($vendorDir . '/giggsey/libphonenumber-for-php/src'),
+    'helper\\' => array($baseDir . '/inc'),
     'Giggsey\\Locale\\' => array($vendorDir . '/giggsey/locale/src'),
 );

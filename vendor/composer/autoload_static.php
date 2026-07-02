@@ -11,6 +11,10 @@ class ComposerStaticInit8158a739e1d5aa45270246e05b9d3133
         array (
             'libphonenumber\\' => 15,
         ),
+        'h' =>
+        array (
+            'helper\\' => 7,
+        ),
         'G' =>
         array (
             'Giggsey\\Locale\\' => 15,
@@ -22,6 +26,10 @@ class ComposerStaticInit8158a739e1d5aa45270246e05b9d3133
         array (
             0 => __DIR__ . '/..' . '/giggsey/libphonenumber-for-php/src',
         ),
+        'helper\\' =>
+        array (
+            0 => __DIR__ . '/../..' . '/inc',
+        ),
         'Giggsey\\Locale\\' =>
         array (
             0 => __DIR__ . '/..' . '/giggsey/locale/src',
@@ -31,6 +39,25 @@ class ComposerStaticInit8158a739e1d5aa45270246e05b9d3133
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Giggsey\\Locale\\Locale' => __DIR__ . '/..' . '/giggsey/locale/src/Locale.php',
+        'helper\\AdminHelper' => __DIR__ . '/../..' . '/inc/AdminHelper.php',
+        'helper\\AnyPostsRestController' => __DIR__ . '/../..' . '/inc/AnyPostsRestController.php',
+        'helper\\AnyTermsRestController' => __DIR__ . '/../..' . '/inc/AnyTermsRestController.php',
+        'helper\\AttachmentHelper' => __DIR__ . '/../..' . '/inc/AttachmentHelper.php',
+        'helper\\CacheHelper' => __DIR__ . '/../..' . '/inc/CacheHelper.php',
+        'helper\\CapabilityHelper' => __DIR__ . '/../..' . '/inc/CapabilityHelper.php',
+        'helper\\ContentTypeHelper' => __DIR__ . '/../..' . '/inc/ContentTypeHelper.php',
+        'helper\\DateTimeHelper' => __DIR__ . '/../..' . '/inc/DateTimeHelper.php',
+        'helper\\FileHelper' => __DIR__ . '/../..' . '/inc/FileHelper.php',
+        'helper\\FormatterHelper' => __DIR__ . '/../..' . '/inc/FormatterHelper.php',
+        'helper\\HookHelper' => __DIR__ . '/../..' . '/inc/HookHelper.php',
+        'helper\\LocaleHelper' => __DIR__ . '/../..' . '/inc/LocaleHelper.php',
+        'helper\\MenuHelper' => __DIR__ . '/../..' . '/inc/MenuHelper.php',
+        'helper\\PostTypeHelper' => __DIR__ . '/../..' . '/inc/PostTypeHelper.php',
+        'helper\\QueryHelper' => __DIR__ . '/../..' . '/inc/QueryHelper.php',
+        'helper\\RestApiHelper' => __DIR__ . '/../..' . '/inc/RestApiHelper.php',
+        'helper\\RewriteHelper' => __DIR__ . '/../..' . '/inc/RewriteHelper.php',
+        'helper\\SecurityHelper' => __DIR__ . '/../..' . '/inc/SecurityHelper.php',
+        'helper\\TaxonomyHelper' => __DIR__ . '/../..' . '/inc/TaxonomyHelper.php',
         'libphonenumber\\AlternateFormatsCountryCodeSet' => __DIR__ . '/..' . '/giggsey/libphonenumber-for-php/src/AlternateFormatsCountryCodeSet.php',
         'libphonenumber\\AsYouTypeFormatter' => __DIR__ . '/..' . '/giggsey/libphonenumber-for-php/src/AsYouTypeFormatter.php',
         'libphonenumber\\CountryCodeSource' => __DIR__ . '/..' . '/giggsey/libphonenumber-for-php/src/CountryCodeSource.php',
