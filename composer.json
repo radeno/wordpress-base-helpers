@@ -18,10 +18,6 @@
     "ext-mbstring": "*",
     "giggsey/libphonenumber-for-php": "~8.13.55"
   },
-  "replace": {
-    "symfony/polyfill-mbstring": "*",
-    "symfony/polyfill-php80": "*"
-  },
   "autoload": {
     "psr-4": {
       "helper\\": "inc/"
