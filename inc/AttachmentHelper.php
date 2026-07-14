@@ -13,9 +13,15 @@ class AttachmentHelper
             return null;
         }
 
-        $attachment    = clone $originalAttachment;
-        $url           = \wp_get_attachment_url($attachmentId);
-        $fileSize      = FileHelper::getRemoteFileSize($url);
+        $attachment = clone $originalAttachment;
+        $url        = \wp_get_attachment_url($attachmentId);
+
+        // WP 6.0+ stores the size at upload time; the HEAD request is only for
+        // attachments whose metadata predates that (or was never backfilled).
+        $metadata      = \wp_get_attachment_metadata($attachmentId);
+        $fileSize      = !empty($metadata['filesize'])
+            ? \size_format($metadata['filesize'])
+            : FileHelper::getRemoteFileSize($url);
         $fileExtension = strtoupper(pathinfo($url, PATHINFO_EXTENSION));
 
         $attachment->url        = $url;

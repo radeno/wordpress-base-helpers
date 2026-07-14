@@ -4,16 +4,33 @@ namespace helper;
 
 class FileHelper
 {
+    private const CONNECT_TIMEOUT = 5;
+    private const TIMEOUT         = 10;
+
     /**
+     * Size of a remote file, read from the Content-Length of a HEAD request.
+     *
+     * Blocking network call. Prefer the `filesize` entry of the attachment
+     * metadata (WP 6.0+); this is the fallback for attachments that lack it.
+     *
      * @param $url
-     * @return false|string
+     * @return false|string Human readable size, or false when it cannot be determined.
      */
     public static function getRemoteFileSize(string $url)
     {
-        $parsedUrl      = parse_url($url);
-        $domain         = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
-        $escapedUrlPath = join('/', array_map('rawurlencode', explode('/', str_replace($domain, '', $url))));
-        $escapedUrl     = $domain . $escapedUrlPath;
+        $parsedUrl = parse_url($url);
+        if ($parsedUrl === false || !isset($parsedUrl['scheme'], $parsedUrl['host'])) {
+            return false;
+        }
+
+        // Only the path gets escaped; a port or a query string (Azure SAS token)
+        // must survive untouched or the request never reaches the file.
+        $escapedPath = join('/', array_map('rawurlencode', explode('/', $parsedUrl['path'] ?? '')));
+
+        $escapedUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host']
+            . (isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '')
+            . $escapedPath
+            . (isset($parsedUrl['query']) ? '?' . $parsedUrl['query'] : '');
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $escapedUrl);
@@ -23,20 +40,26 @@ class FileHelper
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_TCP_NODELAY, true);
-        // $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::CONNECT_TIMEOUT);
+        curl_setopt($ch, CURLOPT_TIMEOUT, self::TIMEOUT);
+        // On a compressed response Content-Length describes the encoded body,
+        // not the file, so ask the origin to send the bytes as they are.
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Accept-Encoding: identity']);
 
-        $data = curl_exec($ch);
-
+        $data         = curl_exec($ch);
+        $responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         curl_close($ch);
-        if ($data === false) {
+
+        // An error page carries a Content-Length of its own, so only a 200 speaks about the file.
+        if ($data === false || $responseCode !== 200) {
             return false;
         }
 
-        $contentLength = 0;
-        if (preg_match('/Content-Length: (\d+)/i', $data, $matches)) {
-            $contentLength = (int)$matches[1];
+        // FOLLOWLOCATION keeps the headers of every hop; the last block is the 200.
+        if (!preg_match_all('/^Content-Length:\s*(\d+)/im', $data, $matches)) {
+            return false;
         }
 
-        return \size_format($contentLength);
+        return \size_format((int)end($matches[1]));
     }
 }
