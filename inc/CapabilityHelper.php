@@ -14,10 +14,20 @@ class CapabilityHelper
     {
         $role = \get_role($roleName);
 
-        // Meta capabilities
-        $role->add_cap('edit_' . $capabilityBase[0]);
-        $role->add_cap('read_' . $capabilityBase[0]);
-        $role->add_cap('delete_' . $capabilityBase[0]);
+        if (!$role) {
+            return;
+        }
+
+        // Meta capabilities. map_meta_cap() rewrites these into the plural primitives below before
+        // anything is compared, so they are only ever read as primitives by a post type registered
+        // with map_meta_cap => false.
+        $postType = \get_post_type_object($capabilityBase[0]);
+
+        if ($postType && !$postType->map_meta_cap) {
+            $role->add_cap('edit_' . $capabilityBase[0]);
+            $role->add_cap('read_' . $capabilityBase[0]);
+            $role->add_cap('delete_' . $capabilityBase[0]);
+        }
 
         // Primitive capabilities used outside of map_meta_cap():
         $role->add_cap('edit_' . $capabilityBase[1]);
@@ -38,15 +48,18 @@ class CapabilityHelper
     {
         $role = \get_role($roleName);
 
+        if (!$role) {
+            return;
+        }
+
+        // Taxonomy capabilities are always compared as primitives (map_meta_cap() maps them onto
+        // themselves) and taxonomies register them in the plural form, so only the plural set is
+        // ever checked. Unlike post types there is no map_meta_cap => false path that would revive
+        // the singular caps.
         $role->add_cap('manage_' . $capabilityBase[1]);
         $role->add_cap('edit_' . $capabilityBase[1]);
         $role->add_cap('delete_' . $capabilityBase[1]);
         $role->add_cap('assign_' . $capabilityBase[1]);
-
-        $role->add_cap('manage_' . $capabilityBase[0]);
-        $role->add_cap('edit_' . $capabilityBase[0]);
-        $role->add_cap('delete_' . $capabilityBase[0]);
-        $role->add_cap('assign_' . $capabilityBase[0]);
     }
 
     /**
