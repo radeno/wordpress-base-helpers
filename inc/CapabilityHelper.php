@@ -14,10 +14,6 @@ class CapabilityHelper
     {
         $role = \get_role($roleName);
 
-        if (!$role) {
-            return;
-        }
-
         // Meta capabilities. map_meta_cap() rewrites these into the plural primitives below before
         // anything is compared, so they are only ever read as primitives by a post type registered
         // with map_meta_cap => false.
@@ -47,10 +43,6 @@ class CapabilityHelper
     public static function addTaxonomyCapabilities($capabilityBase, $roleName = 'administrator')
     {
         $role = \get_role($roleName);
-
-        if (!$role) {
-            return;
-        }
 
         // Taxonomy capabilities are always compared as primitives (map_meta_cap() maps them onto
         // themselves) and taxonomies register them in the plural form, so only the plural set is
