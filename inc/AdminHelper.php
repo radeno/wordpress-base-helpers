@@ -126,7 +126,10 @@ class AdminHelper
             \remove_meta_box('dashboard_activity', 'dashboard', 'normal');
         });
 
-        \remove_action('welcome_panel', 'wp_welcome_panel');
+        // Core hooks the panel in wp-admin/includes/admin-filters.php, which loads after plugins.
+        \add_action('admin_init', function () {
+            \remove_action('welcome_panel', 'wp_welcome_panel');
+        });
     }
 
     public static function addLastModifiedColumn() {
