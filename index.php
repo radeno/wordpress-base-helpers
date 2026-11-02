@@ -10,7 +10,12 @@
 
 namespace helper;
 
-require_once __DIR__ . '/vendor/autoload.php';
+// A site that installs this plugin with Composer already autoloads it, along
+// with the libphonenumber version it resolved. The bundled autoloader would be
+// prepended and load the bundled copy instead.
+if (! class_exists(AdminHelper::class)) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
 
 AdminHelper::initActionsAndFilters();
 CacheHelper::initActionsAndFilters();
