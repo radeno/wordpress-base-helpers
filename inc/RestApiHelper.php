@@ -2,11 +2,6 @@
 
 namespace helper;
 
-require_once "PostTypeHelper.php";
-require_once "TaxonomyHelper.php";
-require_once "AnyPostsRestController.php";
-require_once "AnyTermsRestController.php";
-
 class RestApiHelper
 {
     public static function initActionsAndFilters()

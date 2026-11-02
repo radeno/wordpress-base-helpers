@@ -2,8 +2,6 @@
 
 namespace helper;
 
-require_once "PostTypeHelper.php";
-
 class SecurityHelper
 {
     public static function initActionsAndFilters()

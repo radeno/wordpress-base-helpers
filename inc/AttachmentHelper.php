@@ -2,8 +2,6 @@
 
 namespace helper;
 
-require_once "FileHelper.php";
-
 class AttachmentHelper
 {
     public static function getAttachmentObject($attachmentId)

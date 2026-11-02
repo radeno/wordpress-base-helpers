@@ -2,8 +2,6 @@
 
 namespace helper;
 
-require_once 'PostTypeHelper.php';
-
 class AdminHelper
 {
     public static function initActionsAndFilters()
