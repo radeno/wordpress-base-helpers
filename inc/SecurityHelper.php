@@ -67,7 +67,7 @@ class SecurityHelper
     {
         \add_filter('rewrite_rules_array', function ($rules) {
             foreach ($rules as $rule => $rewrite) {
-                if (strpos($rule, 'feed') !== false && preg_match('/^(?!(\(?feed))/', $rule)) {
+                if (str_contains($rule, 'feed') && preg_match('/^(?!(\(?feed))/', $rule)) {
                     unset($rules[$rule]);
                 }
             }

@@ -101,13 +101,8 @@ class CapabilityHelper
     public static function enablePostTagCapabilities()
     {
         \add_filter('map_meta_cap', function ($required_caps, $cap, $user_id, $args) {
-            switch ($cap) {
-                case 'manage_post_tags':
-                case 'edit_post_tags':
-                case 'delete_post_tags':
-                case 'assign_post_tags':
-                    $required_caps = [$cap];
-                    break;
+            if (in_array($cap, ['manage_post_tags', 'edit_post_tags', 'delete_post_tags', 'assign_post_tags'], true)) {
+                $required_caps = [$cap];
             }
 
             return $required_caps;

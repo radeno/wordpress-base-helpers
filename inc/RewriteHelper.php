@@ -101,7 +101,7 @@ class RewriteHelper
 
         \add_filter("rewrite_rules_array", function ($rules) use ($taxonomyObject) {
             foreach ($rules as $rule => $rewrite) {
-                if (strpos($rule, $taxonomyObject->rewrite["slug"]) === 0) {
+                if (str_starts_with($rule, $taxonomyObject->rewrite["slug"])) {
                     unset($rules[$rule]);
                 }
             }
@@ -114,7 +114,7 @@ class RewriteHelper
     {
         \add_filter("rewrite_rules_array", function ($rules) use ($rewriteString) {
             foreach ($rules as $rule => $rewrite) {
-                if (strpos($rewrite, $rewriteString) !== false) {
+                if (str_contains($rewrite, $rewriteString)) {
                     unset($rules[$rule]);
                 }
             }
@@ -184,7 +184,7 @@ class RewriteHelper
     {
         \add_filter('rewrite_rules_array', function ($rules) {
             foreach ($rules as $rule => $rewrite) {
-                if (strpos($rule, '([0-9]{4})/') === 0) {
+                if (str_starts_with($rule, '([0-9]{4})/')) {
                     unset($rules[$rule]);
                 }
             }

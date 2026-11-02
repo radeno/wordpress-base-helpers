@@ -99,12 +99,6 @@ class QueryHelper
         $normalizedNeedle = !is_array($needle) ? [$needle] : $needle;
         $normalizedHaystack = !is_array($haystack) ? [$haystack] : $haystack;
 
-        foreach ($normalizedNeedle as $item) {
-            if (in_array($item, $normalizedHaystack)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($normalizedNeedle, fn ($item) => in_array($item, $normalizedHaystack));
     }
 }
