@@ -137,23 +137,13 @@ class AdminHelper
         };
 
         $modifiedColumnDisplay = function ($column_name, $post_id) {
-            switch ($column_name) {
-                case "modified":
-                    global $post;
-                    echo \get_the_modified_date() . " " . \get_the_modified_time();
-                    echo "<br />";
-                    if (!empty(\get_the_modified_author())) {
-                        echo "<small>" .
-                            \esc_html__("by") .
-                            " <strong>" .
-                            \get_the_modified_author() .
-                            "<strong></small>";
-                    } else {
-                        echo "<small>" . \esc_html__("by") . " <strong>" . \esc_html__("UNKNOWN") . "<strong></small>";
-                    }
-                    echo "</p>";
-                    break; // end all case breaks
+            if ($column_name !== "modified") {
+                return;
             }
+
+            $author = \get_the_modified_author();
+            echo \esc_html(\get_the_modified_date() . " " . \get_the_modified_time());
+            echo "<br /><small>" . \esc_html__("by") . " <strong>" . (empty($author) ? \esc_html__("UNKNOWN") : \esc_html($author)) . "</strong></small>";
         };
 
         $modifiedColumnRegisterSortable = function ($columns) {
