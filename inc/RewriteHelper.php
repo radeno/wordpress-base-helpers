@@ -101,7 +101,9 @@ class RewriteHelper
 
         \add_filter("rewrite_rules_array", function ($rules) use ($taxonomyObject) {
             foreach ($rules as $rule => $rewrite) {
-                if (str_starts_with($rule, $taxonomyObject->rewrite["slug"])) {
+                // Every rule core adds for the taxonomy starts with "<slug>/"; without the
+                // slash a post type whose slug merely starts the same would lose its rules too.
+                if (str_starts_with($rule, $taxonomyObject->rewrite["slug"] . '/')) {
                     unset($rules[$rule]);
                 }
             }
