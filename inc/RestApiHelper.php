@@ -6,7 +6,6 @@ class RestApiHelper
 {
     public static function initActionsAndFilters()
     {
-        self::addModifiedAfterFilter();
         self::addFeaturedImage();
         self::addStickyProperty();
         self::addStickyQueryParam();
@@ -14,38 +13,12 @@ class RestApiHelper
         self::addAnyTermsRoute();
     }
 
+    /**
+     * @deprecated 1.5.0 The posts controllers support modified_after since WordPress 5.7.
+     */
     public static function addModifiedAfterFilter()
     {
-        \add_action('rest_api_init', function () {
-            foreach (PostTypeHelper::getAllPostTypes() as $postType) {
-                \add_filter(
-                    "rest_{$postType}_collection_params",
-                    function (array $query_params, \WP_Post_Type $post_type) {
-                        $query_params['modified_after'] = [
-                            'description' => __('Limit response to posts modified after a given ISO8601 compliant date.'),
-                            'type'        => 'string',
-                            'format'      => 'date-time'
-                        ];
-                        return $query_params;
-                    },
-                    10,
-                    2
-                );
-
-                \add_filter(
-                    "rest_{$postType}_query",
-                    function (array $args, \WP_REST_Request $request) {
-                        if (isset($request['modified_after']) && !isset($request['after'])) {
-                            $args['date_query'][0]['after'] = $request['modified_after'];
-                            $args['date_query'][0]['column'] = 'post_modified';
-                        }
-                        return $args;
-                    },
-                    10,
-                    2
-                );
-            }
-        });
+        \_deprecated_function(__METHOD__, '1.5.0');
     }
 
     public static function addFeaturedImage()
