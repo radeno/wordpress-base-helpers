@@ -32,15 +32,6 @@ class AttachmentHelper
     public static function getMimeTypes()
     {
         return \get_allowed_mime_types();
-
-        // $onlyDocumentTypes = function ($contentType) {
-        //     return strpos($contentType, 'image/') === false && strpos($contentType, 'video/') === false && strpos($contentType, 'audio/') === false;
-        // };
-
-        // return array_filter(
-        //     array_values(\get_allowed_mime_types()),
-        //     $onlyDocumentTypes
-        // );
     }
 
     public static function getMimeTypesByExtensions(array $extensions)

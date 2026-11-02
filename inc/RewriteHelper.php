@@ -10,16 +10,6 @@ class RewriteHelper
         self::removeDefaultDateRewritesFilter();
     }
 
-    // public static function combinePostTaxonomyAction()
-    // {
-    //     \add_action('registered_taxonomy', function ($taxonomy, $object_type, $args) {
-    //         \helper\TaxonomyHelper::taxRewrite($taxonomy, $object_type, $args);
-    //     }, 10, 3);
-
-    //     add_rewrite_rule($post_type . '/' . $taxonomy/, 'index.php?year=$matches[1]&monthnum=$matches[2]&day=$matches[3]&feed=$matches[4]&post_type=' . $post_type, 'top');
-    // }
-
-
     public static function addPostTaxonomiesRewrite($postType, $taxonomies)
     {
         $postTypeObject = \get_post_type_object($postType);

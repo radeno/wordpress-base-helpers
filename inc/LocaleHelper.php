@@ -17,11 +17,9 @@ class LocaleHelper
     public static function getPluginsLanguageCode(): string|null
     {
         // Check if WPML is active
-        if (function_exists('apply_filters')) {
-            $languageCode = \apply_filters('wpml_current_language', null);
-            if ($languageCode) {
-                return $languageCode;
-            }
+        $languageCode = \apply_filters('wpml_current_language', null);
+        if ($languageCode) {
+            return $languageCode;
         }
 
         // Check if Polylang is active

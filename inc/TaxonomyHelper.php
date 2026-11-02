@@ -58,22 +58,6 @@ class TaxonomyHelper
                 return false;
             }
 
-            /**
-             * Set specific post types to only set parents on.  Set $post_types = FALSE to set parents for ALL post types.
-             */
-            $post_types = false;
-            if ($post_types !== false && ! in_array(\get_post_type($object_id), $post_types)) {
-                return false;
-            }
-
-            /**
-             * Set specific post types to only set parents on.  Set $post_types = FALSE to set parents for ALL post types.
-             */
-            $tax_types = false;
-            if ($tax_types !== false && ! in_array(\get_post_type($object_id), $post_types)) {
-                return false;
-            }
-
             foreach ($tt_ids as $tt_id) {
                 $parent = \wp_get_term_taxonomy_parent_id($tt_id, $taxonomy);
 
