@@ -42,8 +42,8 @@ class FormatterHelper
         return \date_i18n(empty($format) ? \get_option('time_format') : $format, strtotime($isoTime));
     }
 
-    public static function number($numner, $decimals = 0)
+    public static function number($number, $decimals = 0)
     {
-        return \number_format_i18n($numner, $decimals);
+        return \number_format_i18n($number, $decimals);
     }
 }
