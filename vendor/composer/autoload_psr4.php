@@ -6,7 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'libphonenumber\\' => array($vendorDir . '/giggsey/libphonenumber-for-php/src'),
+    'libphonenumber\\' => array($vendorDir . '/giggsey/libphonenumber-for-php-lite/src'),
     'helper\\' => array($baseDir . '/inc'),
-    'Giggsey\\Locale\\' => array($vendorDir . '/giggsey/locale/src'),
+    'Symfony\\Polyfill\\Mbstring\\' => array($vendorDir . '/symfony/polyfill-mbstring'),
 );

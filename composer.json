@@ -1,6 +1,6 @@
 {
   "name": "radeno/wordpress-base-helpers",
-  "version": "1.4.11",
+  "version": "1.5.0",
   "type": "wordpress-plugin",
   "authors": [
     {
@@ -16,7 +16,7 @@
   "require": {
     "php": ">=8.2",
     "ext-mbstring": "*",
-    "giggsey/libphonenumber-for-php": "~8.13.55"
+    "giggsey/libphonenumber-for-php-lite": "^9.0"
   },
   "autoload": {
     "psr-4": {

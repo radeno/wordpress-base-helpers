@@ -6,6 +6,11 @@ class FormatterHelper
 {
     public static function toLocalPhoneNumber($internationalNumber)
     {
+        // libphonenumber 9 types parse() as string, so null would be a TypeError.
+        if (is_null($internationalNumber)) {
+            return null;
+        }
+
         try {
             $phoneUtil    = \libphonenumber\PhoneNumberUtil::getInstance();
             $parsedNumber = $phoneUtil->parse($internationalNumber);
