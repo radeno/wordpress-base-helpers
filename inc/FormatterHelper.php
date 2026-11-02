@@ -34,12 +34,24 @@ class FormatterHelper
 
     public static function date($isoDate, $format = null)
     {
-        return \date_i18n(empty($format) ? \get_option('date_format') : $format, strtotime($isoDate));
+        return \wp_date(empty($format) ? \get_option('date_format') : $format, self::timestamp($isoDate));
     }
 
     public static function time($isoTime, $format = null)
     {
-        return \date_i18n(empty($format) ? \get_option('time_format') : $format, strtotime($isoTime));
+        return \wp_date(empty($format) ? \get_option('time_format') : $format, self::timestamp($isoTime));
+    }
+
+    /**
+     * A string without an offset is site time, like the dates WordPress stores; one
+     * with an offset, such as get_post_time('c'), keeps it. An unparsable string
+     * gives null, which wp_date() formats as the current time, as date_i18n() did.
+     */
+    private static function timestamp($dateString): ?int
+    {
+        $date = \date_create_immutable((string) $dateString, \wp_timezone());
+
+        return $date ? $date->getTimestamp() : null;
     }
 
     public static function number($number, $decimals = 0)

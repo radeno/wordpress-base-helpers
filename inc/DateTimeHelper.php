@@ -48,8 +48,9 @@ class DateTimeHelper
 
     private static function isCompareWith(string $date, string $dateToCompare, string $comparator)
     {
-        $dateObject          = new \DateTime($date);
-        $dateToCompareObject = new \DateTime($dateToCompare);
+        // A string without an offset is site time, like currentDateString() and the dates WordPress stores.
+        $dateObject          = new \DateTimeImmutable($date, \wp_timezone());
+        $dateToCompareObject = new \DateTimeImmutable($dateToCompare, \wp_timezone());
 
         switch ($comparator) {
             case 'eq':
