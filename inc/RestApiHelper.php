@@ -51,8 +51,10 @@ class RestApiHelper
     public static function addFeaturedImage()
     {
         $featuredImage = function ($object, $field_name, $request) {
-            if ($object['featured_media']) {
-                $img = \wp_get_attachment_metadata($object['featured_media']);
+            // $object only carries the requested fields, so featured_media is absent under _fields.
+            $featuredMediaId = \get_post_thumbnail_id($object['id']);
+            if ($featuredMediaId) {
+                $img = \wp_get_attachment_metadata($featuredMediaId);
                 if ($img === false) {
                     return null;
                 }
@@ -60,7 +62,7 @@ class RestApiHelper
                 if (!empty($img['sizes'])) {
                     foreach ($img['sizes'] as $size => $meta) {
                         $attachmentImageSrc = \wp_get_attachment_image_src(
-                            $object['featured_media'],
+                            $featuredMediaId,
                             $size
                         );
                         $img['sizes'][$size]['source_url'] = $attachmentImageSrc[0] ?? null;
