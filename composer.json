@@ -14,7 +14,7 @@
     "classmap-authoritative": true
   },
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.4",
     "ext-mbstring": "*",
     "giggsey/libphonenumber-for-php-lite": "^9.0"
   },
@@ -28,6 +28,6 @@
     "szepeviktor/phpstan-wordpress": "^2.0"
   },
   "suggest": {
-    "wordpress": "WP 6.7 and higher"
+    "wordpress": "WP 7.0 and higher"
   }
 }
