@@ -1,5 +1,5 @@
-# Static analysis of the REST controllers against real WordPress signatures
-# (php-stubs/wordpress-stubs) — no WordPress install needed.
+# Static analysis of inc/ against WordPress 7.0 signatures (php-stubs/wordpress-stubs),
+# no WordPress install needed.
 #
 #   composer install            # pulls require-dev (phpstan + stubs)
 #   vendor/bin/phpstan analyse --memory-limit=1G
@@ -10,19 +10,18 @@ includes:
 
 parameters:
     level: 5
+    phpVersion: 80400
     paths:
-        - inc/AnyPostsRestController.php
-        - inc/AnyTermsRestController.php
-    scanDirectories:
         - inc
     bootstrapFiles:
         - vendor/autoload.php
-
-    # AnyPostsRestController / AnyTermsRestController are faithful copies of
-    # core's controllers (global namespace) placed under `namespace helper`, so
-    # their copied PHPDoc resolves WP_* types to helper\WP_*. We do not edit the
-    # controllers to satisfy the analyser, so that name-resolution noise is
-    # filtered here in the config (not in source).
-    reportUnmatchedIgnoredErrors: false
     ignoreErrors:
-        - '#helper\\WP_#'
+        # getAttachmentObject() hands templates a WP_Post with url, human_size and
+        # extension added; WP_Post allows dynamic properties.
+        -
+            identifier: property.notFound
+            path: inc/AttachmentHelper.php
+        # Offload plugins (e.g. Windows Azure Storage) add 'url' to attachment metadata.
+        -
+            identifier: isset.offset
+            path: inc/RestApiHelper.php

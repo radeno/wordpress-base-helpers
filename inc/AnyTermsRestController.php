@@ -121,8 +121,8 @@ class AnyTermsRestController extends \WP_REST_Terms_Controller
             /**
              * Filters get_terms() arguments of an any-terms collection request.
              *
-             * @param array           $prepared_args Array of arguments for get_terms().
-             * @param WP_REST_Request $request       The REST API request.
+             * @param array            $prepared_args Array of arguments for get_terms().
+             * @param \WP_REST_Request $request       The REST API request.
              */
             return \apply_filters('rest_any_terms_query', $prepared_args, $request);
         };

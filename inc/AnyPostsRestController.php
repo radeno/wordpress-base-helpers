@@ -145,8 +145,8 @@ class AnyPostsRestController extends \WP_REST_Posts_Controller
         /**
          * Filters the WP_Query arguments of an any-posts collection request.
          *
-         * @param array           $prepared_args Array of arguments for WP_Query.
-         * @param WP_REST_Request $request       The REST API request.
+         * @param array            $prepared_args Array of arguments for WP_Query.
+         * @param \WP_REST_Request $request       The REST API request.
          */
         return parent::prepare_items_query(\apply_filters('rest_any_posts_query', $prepared_args, $request), $request);
     }
