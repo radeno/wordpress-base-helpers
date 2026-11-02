@@ -79,15 +79,7 @@ class TaxonomyHelper
         }
 
         foreach ($taxonomyObject->object_type as $postType) {
-            $postTypeObject = \get_post_type_object($postType);
-
-            $regex    = sprintf('%s/(.+?)/page/([0-9]{1,})/?$', "{$postTypeObject->rewrite['slug']}/{$taxonomyObject->rewrite['slug']}");
-            $redirect = "index.php?post_type={$postType}&{$taxonomy}=\$matches[1]&paged=\$matches[2]";
-            \add_rewrite_rule($regex, $redirect, 'top');
-
-            $regex    = sprintf('%s/(.+?)/?$', "{$postTypeObject->rewrite['slug']}/{$taxonomyObject->rewrite['slug']}");
-            $redirect = "index.php?post_type={$postType}&{$taxonomy}=\$matches[1]";
-            \add_rewrite_rule($regex, $redirect, 'top');
+            RewriteHelper::addPostTaxonomiesRewrite($postType, [$taxonomy]);
         }
     }
 }

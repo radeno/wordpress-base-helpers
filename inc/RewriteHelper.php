@@ -13,6 +13,11 @@ class RewriteHelper
     public static function addPostTaxonomiesRewrite($postType, $taxonomies)
     {
         $postTypeObject = \get_post_type_object($postType);
+        // The built-in post and page types register rewrite => false, so there is no slug to prefix.
+        if ($postTypeObject->rewrite === false) {
+            return;
+        }
+
         $taxonomiesObjects = array_map(function ($taxonomy) {
             return \get_taxonomy($taxonomy);
         }, $taxonomies);
