@@ -68,7 +68,8 @@ class QueryHelper
             array_merge(
                 [
                     'post_type'           => 'any',
-                    'post__in'            => $ids ?? [0],
+                    // WP_Query ignores an empty post__in, which would return every post.
+                    'post__in'            => $ids ?: [0],
                     'posts_per_page'      => -1,
                     'post_status'         => 'publish',
                     'order'               => 'ASC',
