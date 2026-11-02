@@ -4,6 +4,9 @@ namespace helper;
 
 class RewriteHelper
 {
+    /** @var array<string, array<string, true>> Post types that have a /<archive>/<taxonomy>/<term>/ rule, by taxonomy. */
+    private static array $postTaxonomyRewrites = [];
+
     public static function initActionsAndFilters()
     {
         self::postTypeTaxonomyLinksAction();
@@ -41,6 +44,10 @@ class RewriteHelper
             \add_rewrite_rule("{$regex}/{$wp_rewrite->pagination_base}/([0-9]{1,})/?$", "{$query}&paged=\$matches[{$page}]", 'top');
         }
         \add_rewrite_rule("{$regex}/?$", $query, 'top');
+
+        if (count($taxonomiesObjects) === 1) {
+            self::$postTaxonomyRewrites[$taxonomiesObjects[0]->name][$postType] = true;
+        }
     }
 
     /**
@@ -59,6 +66,33 @@ class RewriteHelper
         $slug = is_string($postTypeObject->has_archive) && $postTypeObject->has_archive !== '' ? $postTypeObject->has_archive : $postTypeObject->rewrite['slug'];
 
         return $postTypeObject->rewrite['with_front'] ? substr($wp_rewrite->front, 1) . $slug : $wp_rewrite->root . $slug;
+    }
+
+    /**
+     * A term's path segment, as get_term_link() builds it.
+     */
+    private static function termPath(\WP_Term $term): string
+    {
+        if (empty(\get_taxonomy($term->taxonomy)->rewrite['hierarchical'])) {
+            return $term->slug;
+        }
+
+        $ancestors = array_reverse(\get_ancestors($term->term_id, $term->taxonomy, 'taxonomy'));
+
+        return implode('/', [...array_map(fn ($id) => \get_term($id, $term->taxonomy)->slug, $ancestors), $term->slug]);
+    }
+
+    /**
+     * @param array<string, string> $termPaths Term path by taxonomy, in URL order.
+     */
+    private static function postTaxonomiesLink(string $archivePath, array $termPaths): string
+    {
+        $path = $archivePath;
+        foreach ($termPaths as $taxonomy => $termPath) {
+            $path .= '/' . \get_taxonomy($taxonomy)->rewrite['slug'] . '/' . $termPath;
+        }
+
+        return \home_url(\user_trailingslashit($path, 'category'));
     }
 
     public static function removeIndependentTaxonomyRewrite($taxonomy)
@@ -111,21 +145,12 @@ class RewriteHelper
 
     public static function getPostTaxonomiesTermsLink($postType, $taxonomies, $currentTerm, $currentTaxonomy)
     {
-        $postTypeObject = \get_post_type_object($postType);
-        $taxonomiesObjects = array_map(function ($taxonomy) {
-            return \get_taxonomy($taxonomy);
-        }, $taxonomies);
-
-        $taxonomyTerms = [];
+        $termPaths = [];
         foreach ($taxonomies as $taxonomy) {
-            $taxonomyTerms[$taxonomy] = $taxonomy == $currentTaxonomy ? $currentTerm->slug : \get_query_var($taxonomy);
+            $termPaths[$taxonomy] = $taxonomy == $currentTaxonomy ? self::termPath($currentTerm) : \get_query_var(\get_taxonomy($taxonomy)->query_var ?: $taxonomy);
         }
 
-        $taxonomiesSlugsString = join('/', array_map(function ($taxonomy) use ($taxonomyTerms) {
-            return $taxonomy->rewrite['slug'] . '/' . $taxonomyTerms[$taxonomy->name];
-        }, $taxonomiesObjects));
-
-        return \home_url() . '/' . $postTypeObject->rewrite['slug'] . '/' . $taxonomiesSlugsString . '/';
+        return self::postTaxonomiesLink((string) self::postTypeArchivePath(\get_post_type_object($postType)), $termPaths);
     }
 
     public static function postTypeTaxonomyLinksAction()
@@ -133,28 +158,22 @@ class RewriteHelper
         \add_filter(
             'term_link',
             function ($url, $term, $taxonomy) {
-                $taxonomy_obj = \get_taxonomy($taxonomy);
+                global $wp_rewrite;
 
-                if ($taxonomy_obj->_builtin || $taxonomy_obj->rewrite === false) {
+                $taxonomyObject = \get_taxonomy($taxonomy);
+                if ($taxonomyObject->_builtin || ! $wp_rewrite->using_permalinks()) {
                     return $url;
                 }
 
-                if (in_array(\get_post_type(), $taxonomy_obj->object_type, true)) {
-                    $post_type = \get_post_type();
-                } else {
-                    $post_type = $taxonomy_obj->object_type[0];
+                // Only post types that addPostTaxonomiesRewrite() added a rule for, so the link resolves.
+                $postTypes = array_values(array_filter($taxonomyObject->object_type, fn ($postType) => isset(self::$postTaxonomyRewrites[$taxonomy][$postType])));
+                if (! $postTypes) {
+                    return $url;
                 }
 
-                $post_type_obj = \get_post_type_object($post_type);
+                $postType = in_array(\get_post_type(), $postTypes, true) ? \get_post_type() : $postTypes[0];
 
-                // The built-in post and page types register rewrite => false.
-                $post_type_slug = $post_type_obj->rewrite['slug'] ?? null;
-
-                if (!empty($post_type_slug)) {
-                    $url = \home_url() . '/' . $post_type_slug . '/' . $taxonomy_obj->rewrite['slug'] . '/' . $term->slug . '/';
-                }
-
-                return $url;
+                return self::postTaxonomiesLink(self::postTypeArchivePath(\get_post_type_object($postType)), [$taxonomy => self::termPath($term)]);
             },
             10,
             3
