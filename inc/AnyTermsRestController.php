@@ -2,9 +2,6 @@
 
 namespace helper;
 
-require_once "PostTypeHelper.php";
-require_once "TaxonomyHelper.php";
-
 class AnyTermsRestController extends \WP_REST_Terms_Controller
 {
     /** @var string[] Taxonomies exposed by this controller. */
@@ -22,12 +19,9 @@ class AnyTermsRestController extends \WP_REST_Terms_Controller
     }
 
     /**
-     * Registers the routes for terms.
-     *
-     * @since 4.7.0
-     *
-     * @see register_rest_route()
+     * Registers the read-only routes; the parent would also register write routes.
      */
+    #[\Override]
     public function register_routes()
     {
         \register_rest_route(
@@ -68,370 +62,150 @@ class AnyTermsRestController extends \WP_REST_Terms_Controller
     }
 
     /**
-     * Checks if a request has access to read terms in the specified taxonomy.
-     *
-     * @since 4.7.0
-     *
-     * @param WP_REST_Request $request Full details about the request.
-     * @return true|WP_Error True if the request has read access, otherwise false or WP_Error object.
+     * The parent only checks the representative taxonomy, so check every requested one.
      */
+    #[\Override]
     public function get_items_permissions_check($request)
     {
+        foreach ($this->requested_taxonomies($request) as $taxonomy) {
+            if ('edit' === $request['context'] && ! \current_user_can(\get_taxonomy($taxonomy)->cap->edit_terms)) {
+                return new \WP_Error(
+                    'rest_forbidden_context',
+                    __('Sorry, you are not allowed to edit terms in this taxonomy.'),
+                    [ 'status' => \rest_authorization_required_code() ]
+                );
+            }
+        }
+
+        if (! empty($request['post'])) {
+            $post = \get_post($request['post']);
+            if (! $post) {
+                return new \WP_Error('rest_post_invalid_id', __('Invalid post ID.'), [ 'status' => 400 ]);
+            }
+            if (! \is_post_publicly_viewable($post) && ! \current_user_can('read_post', $post->ID)) {
+                return new \WP_Error(
+                    'rest_forbidden_context',
+                    __('Sorry, you are not allowed to view terms for this post.'),
+                    [ 'status' => \rest_authorization_required_code() ]
+                );
+            }
+        }
+
         return true;
     }
 
-    /**
-     * Retrieves terms associated with a taxonomy.
-     *
-     * @since 4.7.0
-     *
-     * @param WP_REST_Request $request Full details about the request.
-     * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
-     */
+    #[\Override]
     public function get_items($request)
     {
+        // Excluding every taxonomy leaves nothing, but an empty taxonomy list
+        // would make get_terms() search all of them, private ones included.
+        if (! $this->requested_taxonomies($request)) {
+            $response = \rest_ensure_response([]);
+            $response->header('X-WP-Total', '0');
+            $response->header('X-WP-TotalPages', '0');
 
-        // Retrieve the list of registered collection query parameters.
-        $registered = $this->get_collection_params();
-
-        /*
-         * This array defines mappings between public API query parameters whose
-         * values are accepted as-passed, and their internal WP_Query parameter
-         * name equivalents (some are the same). Only values which are also
-         * present in $registered will be set.
-         */
-        $parameter_mappings = [
-            'exclude'    => 'exclude',
-            'include'    => 'include',
-            'order'      => 'order',
-            'orderby'    => 'orderby',
-            'post'       => 'post',
-            'hide_empty' => 'hide_empty',
-            'per_page'   => 'number',
-            'search'     => 'search',
-            'slug'       => 'slug',
-            'type'       => 'taxonomy',
-        ];
-
-        $prepared_args = [];
-        if (!empty($request['type'])) {
-            $prepared_args['taxonomy'] = $request['type'];
-        } elseif (!empty($request['except_type'])) {
-            $prepared_args['taxonomy'] = array_diff($this->taxonomies, (array) $request['except_type']);
-        } else {
-            $prepared_args['taxonomy'] = $this->taxonomies;
+            return $response;
         }
 
-        /*
-         * For each known parameter which is both registered and present in the request,
-         * set the parameter's value on the query $prepared_args.
-         */
-        foreach ($parameter_mappings as $api_param => $wp_param) {
-            if (isset($registered[ $api_param ], $request[ $api_param ])) {
-                $prepared_args[ $wp_param ] = $request[ $api_param ];
-            }
-        }
+        // Core has no query hook like the posts controller, so widen its
+        // representative-taxonomy query for the duration of this request.
+        $widen = function (array $prepared_args) use ($request) {
+            $prepared_args['taxonomy'] = $this->requested_taxonomies($request);
 
-        if (isset($prepared_args['orderby']) && isset($request['orderby'])) {
-            $orderby_mappings = [
-                'include_slugs' => 'slug__in',
-            ];
-
-            if (isset($orderby_mappings[ $request['orderby'] ])) {
-                $prepared_args['orderby'] = $orderby_mappings[ $request['orderby'] ];
-            }
-        }
-
-        if (isset($registered['offset']) && ! empty($request['offset'])) {
-            $prepared_args['offset'] = $request['offset'];
-        } else {
-            $prepared_args['offset'] = ($request['page'] - 1) * $prepared_args['number'];
-        }
-
-        if (0 === $request['parent']) {
-            // Only query top-level terms.
-            $prepared_args['parent'] = 0;
-        } else {
-            if ($request['parent']) {
-                $prepared_args['parent'] = $request['parent'];
-            }
-        }
-
-        /**
-         * Filters get_terms() arguments when querying terms via the REST API.
-         *
-         * The dynamic portion of the hook name, `$this->taxonomy`, refers to the taxonomy slug.
-         *
-         * Possible hook names include:
-         *
-         *  - `rest_category_query`
-         *  - `rest_post_tag_query`
-         *
-         * Enables adding extra arguments or setting defaults for a terms
-         * collection request.
-         *
-         * @since 4.7.0
-         *
-         * @link https://developer.wordpress.org/reference/functions/get_terms/
-         *
-         * @param array           $prepared_args Array of arguments for get_terms().
-         * @param WP_REST_Request $request       The REST API request.
-         */
-        $prepared_args = \apply_filters("rest_any_terms_query", $prepared_args, $request);
-
-        if (! empty($prepared_args['post'])) {
-            $query_result = \wp_get_object_terms($prepared_args['post'], $this->taxonomies, $prepared_args);
-
-            // Used when calling wp_count_terms() below.
-            $prepared_args['object_ids'] = $prepared_args['post'];
-        } else {
-            $terms_query  = new \WP_Term_Query();
-            $query_result = $terms_query->query($prepared_args, ['count' => true]);
-        }
-
-        $count_args = $prepared_args;
-        unset($count_args['number'], $count_args['offset']);
-        $count_args['count']  = true;
-        $count_args['fields'] = 'count';
-
-        $terms_count_query = new \WP_Term_Query();
-        $total_terms       = $terms_count_query->query($count_args);
-
-        // wp_count_terms() can return a falsy value when the term has no children.
-        if (! $total_terms) {
-            $total_terms = 0;
-        }
-
-        $response = [];
-
-        foreach ($query_result as $term) {
-            $data       = $this->prepare_item_for_response($term, $request);
-            $response[] = $this->prepare_response_for_collection($data);
-        }
-
-        $response = \rest_ensure_response($response);
-
-        // Store pagination values for headers.
-        $per_page = (int) $prepared_args['number'];
-        $page     = ceil((((int) $prepared_args['offset']) / $per_page) + 1);
-
-        $response->header('X-WP-Total', (int) $total_terms);
-
-        $max_pages = ceil($total_terms / $per_page);
-
-        $response->header('X-WP-TotalPages', (int) $max_pages);
-
-        $base = \add_query_arg(urlencode_deep($request->get_query_params()), \rest_url($this->namespace . '/' . $this->rest_base));
-        if ($page > 1) {
-            $prev_page = $page - 1;
-
-            if ($prev_page > $max_pages) {
-                $prev_page = $max_pages;
+            // Core reads a post's terms from the representative taxonomy only.
+            if (! empty($prepared_args['post'])) {
+                $prepared_args['object_ids'] = $prepared_args['post'];
+                unset($prepared_args['post']);
             }
 
-            $prev_link = \add_query_arg('page', $prev_page, $base);
-            $response->link_header('prev', $prev_link);
-        }
-        if ($max_pages > $page) {
-            $next_page = $page + 1;
-            $next_link = \add_query_arg('page', $next_page, $base);
+            /**
+             * Filters get_terms() arguments of an any-terms collection request.
+             *
+             * @param array           $prepared_args Array of arguments for get_terms().
+             * @param WP_REST_Request $request       The REST API request.
+             */
+            return \apply_filters('rest_any_terms_query', $prepared_args, $request);
+        };
 
-            $response->link_header('next', $next_link);
+        \add_filter("rest_{$this->taxonomy}_query", $widen, PHP_INT_MAX);
+        try {
+            $response = parent::get_items($request);
+        } finally {
+            \remove_filter("rest_{$this->taxonomy}_query", $widen, PHP_INT_MAX);
+        }
+
+        // Core builds the pagination links from the representative taxonomy's route.
+        if ($response instanceof \WP_REST_Response && isset($response->get_headers()['Link'])) {
+            $from  = \rest_url(\rest_get_route_for_taxonomy_items($this->taxonomy));
+            $to    = \rest_url("{$this->namespace}/{$this->rest_base}");
+            $links = array_map(fn (string $link) => str_replace($from, $to, $link), (array) $response->get_headers()['Link']);
+            $response->header('Link', implode(', ', $links));
         }
 
         return $response;
     }
 
-    /**
-     * Get the term, if the ID is valid.
-     *
-     * @since 4.7.2
-     *
-     * @param int $id Supplied ID.
-     * @return WP_Term|WP_Error Term object if ID is valid, WP_Error otherwise.
-     */
+    private function requested_taxonomies(\WP_REST_Request $request): array
+    {
+        return $request['type'] ?: array_values(array_diff($this->taxonomies, $request['except_type'] ?? []));
+    }
+
+    #[\Override]
     protected function get_term($id)
     {
-        $error = new \WP_Error(
-            'rest_term_invalid',
-            __('Term does not exist.'),
-            [ 'status' => 404 ]
-        );
-
-        if ((int) $id <= 0) {
-            return $error;
-        }
-
-        $term = \get_term((int) $id);
-        if (empty($term) || !in_array($term->taxonomy, $this->taxonomies)) {
-            return $error;
+        // The parent only accepts the representative taxonomy.
+        $term = (int) $id > 0 ? \get_term((int) $id) : null;
+        if (! $term instanceof \WP_Term || ! in_array($term->taxonomy, $this->taxonomies, true)) {
+            return new \WP_Error('rest_term_invalid', __('Term does not exist.'), [ 'status' => 404 ]);
         }
 
         return $term;
     }
 
     /**
-     * Prepares a single term output for response.
-     *
-     * @since 4.7.0
-     *
-     * @param WP_Term         $item    Term object.
-     * @param WP_REST_Request $request Request object.
-     * @return WP_REST_Response Response object.
+     * Renders each term with its own taxonomy's controller, so the output matches /wp/v2.
      */
+    #[\Override]
     public function prepare_item_for_response($item, $request)
     {
-        $taxonomy_obj = \get_taxonomy($item->taxonomy);
-        $fields       = $this->get_fields_for_response($request);
-        $data         = [];
-
-        if (in_array('id', $fields, true)) {
-            $data['id'] = (int) $item->term_id;
+        $controller = \get_taxonomy($item->taxonomy)->get_rest_controller();
+        if (! $controller instanceof \WP_REST_Terms_Controller) {
+            return parent::prepare_item_for_response($item, $request);
         }
 
-        if (in_array('count', $fields, true)) {
-            $data['count'] = (int) $item->count;
+        // any_terms has never returned _links unless asked.
+        if (! isset($request['_fields']) && ! $request->has_param('_embed')) {
+            $request = clone $request;
+            $request->set_param('_fields', array_diff($controller->get_fields_for_response($request), ['_links']));
         }
 
-        if (in_array('description', $fields, true)) {
-            $data['description'] = $item->description;
-        }
-
-        if (in_array('link', $fields, true)) {
-            $data['link'] = \get_term_link($item);
-        }
-
-        if (in_array('name', $fields, true)) {
-            $data['name'] = $item->name;
-        }
-
-        if (in_array('slug', $fields, true)) {
-            $data['slug'] = $item->slug;
-        }
-
-        if (in_array('taxonomy', $fields, true)) {
-            $data['taxonomy'] = $item->taxonomy;
-        }
-
-        if ($taxonomy_obj->hierarchical) {
-            if (in_array('parent', $fields, true)) {
-                $data['parent'] = (int) $item->parent;
-            }
-        }
-
-        if (in_array('meta', $fields, true)) {
-            $meta         = new \WP_REST_Term_Meta_Fields($item->taxonomy);
-            $data['meta'] = $meta->get_value($item->term_id, $request);
-        }
-
-        $context = ! empty($request['context']) ? $request['context'] : 'view';
-        $data    = $this->add_additional_fields_to_object($data, $request);
-        $data    = $this->filter_response_by_context($data, $context);
-
-        $response = \rest_ensure_response($data);
-
-        /**
-         * Filters a term item returned from the API.
-         *
-         * The dynamic portion of the hook name, `$this->taxonomy`, refers to the taxonomy slug.
-         *
-         * Allows modification of the term data right before it is returned.
-         *
-         * @since 4.7.0
-         *
-         * @param WP_REST_Response  $response  The response object.
-         * @param WP_Term           $item      The original term object.
-         * @param WP_REST_Request   $request   Request used to generate the response.
-         */
-        return apply_filters("rest_prepare_{$item->taxonomy}", $response, $item, $request);
+        return $controller->prepare_item_for_response($item, $request);
     }
 
     /**
-     * Retrieves the term's schema, conforming to JSON Schema.
-     *
-     * @since 4.7.0
-     *
-     * @return array Item schema data.
+     * Union of every exposed taxonomy's schema; the first definition of a property wins.
      */
+    #[\Override]
     public function get_item_schema()
     {
-        if ($this->schema) {
-            return $this->add_additional_fields_schema($this->schema);
+        if (! $this->schema) {
+            $properties = [];
+            foreach ($this->taxonomies as $taxonomy) {
+                $properties += \get_taxonomy($taxonomy)->get_rest_controller()?->get_item_schema()['properties'] ?? [];
+            }
+
+            $this->schema = [
+                '$schema'    => 'http://json-schema.org/draft-04/schema#',
+                'title'      => 'any_term',
+                'type'       => 'object',
+                'properties' => $properties,
+            ];
         }
-
-        $schema = [
-            '$schema'    => 'http://json-schema.org/draft-04/schema#',
-            'title'      => 'any_term',
-            'type'       => 'object',
-            'properties' => [
-                'id' => [
-                    'description' => __('Unique identifier for the term.'),
-                    'type'        => 'integer',
-                    'context'     => [ 'view', 'embed', 'edit' ],
-                    'readonly'    => true,
-                ],
-                'count' => [
-                    'description' => __('Number of published posts for the term.'),
-                    'type'        => 'integer',
-                    'context'     => [ 'view', 'edit' ],
-                    'readonly'    => true,
-                ],
-                'description' => [
-                    'description' => __('HTML description of the term.'),
-                    'type'        => 'string',
-                    'context'     => [ 'view', 'edit' ],
-                ],
-                'link' => [
-                    'description' => __('URL of the term.'),
-                    'type'        => 'string',
-                    'format'      => 'uri',
-                    'context'     => [ 'view', 'embed', 'edit' ],
-                    'readonly'    => true,
-                ],
-                'name' => [
-                    'description' => __('HTML title for the term.'),
-                    'type'        => 'string',
-                    'context'     => [ 'view', 'embed', 'edit' ],
-                    'arg_options' => [
-                        'sanitize_callback' => 'sanitize_text_field',
-                    ],
-                    'required' => true,
-                ],
-                'slug' => [
-                    'description' => __('An alphanumeric identifier for the term unique to its type.'),
-                    'type'        => 'string',
-                    'context'     => [ 'view', 'embed', 'edit' ],
-                    'arg_options' => [
-                        'sanitize_callback' => [ $this, 'sanitize_slug' ],
-                    ],
-                ],
-                'taxonomy' => [
-                    'description' => __('Type attribution for the term.'),
-                    'type'        => 'string',
-                    'context'     => [ 'view', 'embed', 'edit' ],
-                    'readonly'    => true,
-                ],
-            ],
-        ];
-
-        $schema['properties']['parent'] = [
-            'description' => __('The parent term ID.'),
-            'type'        => 'integer',
-            'context'     => [ 'view', 'edit' ],
-        ];
-
-        $this->schema = $schema;
 
         return $this->add_additional_fields_schema($this->schema);
     }
 
-    /**
-     * Retrieves the query params for collections.
-     *
-     * @since 4.7.0
-     *
-     * @return array Collection parameters.
-     */
+    #[\Override]
     public function get_collection_params()
     {
         // Parent (WP_REST_Terms_Controller) supplies the full term collection
@@ -444,7 +218,6 @@ class AnyTermsRestController extends \WP_REST_Terms_Controller
             'description' => __('Limit results to one or more taxonomies.'),
             'type'        => 'array',
             'items'       => [ 'type' => 'string', 'enum' => $this->taxonomies ],
-            'default'     => $this->taxonomies,
         ];
 
         $query_params['except_type'] = [
@@ -456,12 +229,10 @@ class AnyTermsRestController extends \WP_REST_Terms_Controller
 
         // 'category' is hierarchical, so the parent omits offset; re-add it since
         // the aggregated set also spans non-hierarchical taxonomies.
-        if (! isset($query_params['offset'])) {
-            $query_params['offset'] = [
-                'description' => __('Offset the result set by a specific number of items.'),
-                'type'        => 'integer',
-            ];
-        }
+        $query_params['offset'] ??= [
+            'description' => __('Offset the result set by a specific number of items.'),
+            'type'        => 'integer',
+        ];
 
         /**
          * Filters collection parameters for the any-terms controller.
