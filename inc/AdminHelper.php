@@ -7,8 +7,8 @@ class AdminHelper
     /**
      * Control over the whole site and its accounts: settings, plugins, themes, core updates,
      * unfiltered uploads and markup, and other users; on a single site edit_users reaches an
-     * administrator's password too. restrictRoleAssignFilter() lets only a user who holds such
-     * a capability hand it out.
+     * administrator's password too. Only a user who holds such a capability may hand it out
+     * (restrictRoleAssignFilter()) or see and manage the accounts that hold it (protectSiteAdminsFilter()).
      */
     private const SITE_ADMIN_CAPABILITIES = [
         'manage_options',
@@ -25,6 +25,7 @@ class AdminHelper
         self::overrideStyleAction();
         self::removeUpdateNotificationAction();
         self::restrictRoleAssignFilter();
+        self::protectSiteAdminsFilter();
         self::sortRolesFilter();
         self::removeMetaBoxesAction();
         self::removeAdminDashboards();
@@ -110,10 +111,8 @@ class AdminHelper
         \add_filter('editable_roles', function ($all_roles) {
             $user = wp_get_current_user();
 
-            // Granted capabilities are compared, not current_user_can(): DISALLOW_FILE_EDIT
-            // and the like deny some of these even to administrators.
             foreach ($all_roles as $name => $role) {
-                if (array_any(self::SITE_ADMIN_CAPABILITIES, fn ($capability) => ! empty($role['capabilities'][$capability]) && empty($user->allcaps[$capability]))) {
+                if (self::outranks($role['capabilities'], $user)) {
                     unset($all_roles[$name]);
                 }
             }
@@ -127,6 +126,64 @@ class AdminHelper
 
             return $all_roles;
         });
+    }
+
+    /**
+     * Keeps the accounts that outrank the current user off the Users screen, and keeps them
+     * from being edited, given another role or deleted, also by URL or through the REST API.
+     */
+    public static function protectSiteAdminsFilter()
+    {
+        \add_filter('map_meta_cap', function ($caps, $cap, $user_id, $args) {
+            if (in_array($cap, ['edit_user', 'promote_user', 'delete_user', 'remove_user'], true) && ! empty($args[0])) {
+                $user   = \get_userdata($user_id);
+                $target = \get_userdata((int) $args[0]);
+                if ($user && $target && self::outranks($target->allcaps, $user)) {
+                    $caps[] = 'do_not_allow';
+                }
+            }
+
+            return $caps;
+        }, 10, 4);
+
+        \add_filter('users_list_table_query_args', function ($args) {
+            $withheld = self::withheldSiteAdminCapabilities(\wp_get_current_user());
+            if ($withheld) {
+                $args['capability__not_in'] = [...(array) ($args['capability__not_in'] ?? []), ...$withheld];
+            }
+
+            return $args;
+        });
+
+        // The role links above the table.
+        \add_filter('views_users', function ($views) {
+            foreach (\wp_roles()->roles as $name => $role) {
+                if (self::outranks($role['capabilities'], \wp_get_current_user())) {
+                    unset($views[$name]);
+                }
+            }
+
+            return $views;
+        });
+    }
+
+    /**
+     * The site-admin capabilities $user is not granted. Granted capabilities are compared, not
+     * current_user_can(): DISALLOW_FILE_EDIT and the like deny some of them even to administrators.
+     *
+     * @return string[]
+     */
+    private static function withheldSiteAdminCapabilities(\WP_User $user): array
+    {
+        return array_values(array_filter(self::SITE_ADMIN_CAPABILITIES, fn ($capability) => empty($user->allcaps[$capability])));
+    }
+
+    /**
+     * Whether $capabilities, a role's or an account's, grant a site-admin capability that $user lacks.
+     */
+    private static function outranks(array $capabilities, \WP_User $user): bool
+    {
+        return array_any(self::withheldSiteAdminCapabilities($user), fn ($capability) => ! empty($capabilities[$capability]));
     }
 
     public static function sortRolesFilter()
