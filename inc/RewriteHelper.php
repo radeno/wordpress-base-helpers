@@ -123,7 +123,8 @@ class RewriteHelper
 
                 $post_type_obj = \get_post_type_object($post_type);
 
-                $post_type_slug = $post_type_obj->rewrite['slug'];
+                // The built-in post and page types register rewrite => false.
+                $post_type_slug = $post_type_obj->rewrite['slug'] ?? null;
 
                 if (!empty($post_type_slug)) {
                     $url = \home_url() . '/' . $post_type_slug . '/' . $taxonomy_obj->rewrite['slug'] . '/' . $term->slug . '/';
