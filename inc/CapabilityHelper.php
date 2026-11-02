@@ -60,8 +60,8 @@ class CapabilityHelper
      *
      * @param  array  $postTypes [['POST_TYPE_SINGULAR', 'POST_TYPE_PLURAL]]
      * @param  array  $taxonomies [['TAXONOMY_SINGULAR', 'TAXONOMY_PLURAL]]
-     * @param  array  $role 'administrator'
-     * @return array
+     * @param  string $role 'administrator'
+     * @return void
      *
      */
     public static function addContentTypesCapabilities(array $postTypes, array $taxonomies, string $role)

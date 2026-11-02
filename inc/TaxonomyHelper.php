@@ -55,7 +55,7 @@ class TaxonomyHelper
              * We only want to move forward if there are taxonomies to set
              */
             if (empty($tt_ids)) {
-                return false;
+                return;
             }
 
             foreach ($tt_ids as $tt_id) {

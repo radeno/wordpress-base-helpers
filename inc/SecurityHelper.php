@@ -41,7 +41,7 @@ class SecurityHelper
         );
 
         // Remove Pingback
-        \add_filter('template_redirect', function () {
+        \add_action('template_redirect', function () {
             header_remove('X-Pingback');
         });
     }
