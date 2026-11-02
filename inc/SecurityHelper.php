@@ -25,6 +25,13 @@ class SecurityHelper
 
         # Disable XML-RPC
         \add_filter('xmlrpc_enabled', '__return_null');
+        // xmlrpc_enabled only covers the methods that need a login; pingback.ping
+        // would still make the site fetch any URL a stranger names.
+        \add_filter('xmlrpc_methods', function ($methods) {
+            unset($methods['pingback.ping'], $methods['pingback.extensions.getPingbacks']);
+
+            return $methods;
+        });
         \add_filter(
             'bloginfo_url',
             function ($output, $show) {
