@@ -10,36 +10,55 @@ class RewriteHelper
         self::removeDefaultDateRewritesFilter();
     }
 
+    /**
+     * Adds /<post type archive>/<taxonomy>/<term>/… rules, built the way core builds
+     * the post type archive rules (WP_Post_Type::add_rewrite_rules()) and the
+     * taxonomy's own term rules (WP_Taxonomy::add_rewrite_rules()).
+     */
     public static function addPostTaxonomiesRewrite($postType, $taxonomies)
     {
-        $postTypeObject = \get_post_type_object($postType);
-        // The built-in post and page types register rewrite => false, so there is no slug to prefix.
-        if ($postTypeObject->rewrite === false) {
+        global $wp_rewrite;
+
+        $postTypeObject    = \get_post_type_object($postType);
+        $taxonomiesObjects = array_map(fn ($taxonomy) => \get_taxonomy($taxonomy), array_values($taxonomies));
+
+        // The built-in post and page types register rewrite => false, so there is no slug to use.
+        $archivePath = self::postTypeArchivePath($postTypeObject);
+        if ($archivePath === null || array_filter($taxonomiesObjects, fn ($taxonomy) => ! is_array($taxonomy->rewrite))) {
             return;
         }
 
-        $taxonomiesObjects = array_map(function ($taxonomy) {
-            return \get_taxonomy($taxonomy);
-        }, $taxonomies);
+        $regex = $archivePath;
+        $query = "index.php?post_type={$postType}";
+        foreach ($taxonomiesObjects as $i => $taxonomy) {
+            $tag    = $taxonomy->hierarchical && $taxonomy->rewrite['hierarchical'] ? '(.+?)' : '([^/]+)';
+            $regex .= "/{$taxonomy->rewrite['slug']}/{$tag}";
+            $query .= ($taxonomy->query_var ? "&{$taxonomy->query_var}=" : "&taxonomy={$taxonomy->name}&term=") . '$matches[' . ($i + 1) . ']';
+        }
 
-        $postTypeRewriteSlug = $postTypeObject->rewrite['slug'];
-        $taxonomiesRewriteSlugsString = join('/', array_map(function ($taxonomy) {
-            return $taxonomy->rewrite['slug'] . '/' . '(.+?)';
-        }, $taxonomiesObjects));
+        if ($postTypeObject->rewrite['pages']) {
+            $page = count($taxonomiesObjects) + 1;
+            \add_rewrite_rule("{$regex}/{$wp_rewrite->pagination_base}/([0-9]{1,})/?$", "{$query}&paged=\$matches[{$page}]", 'top');
+        }
+        \add_rewrite_rule("{$regex}/?$", $query, 'top');
+    }
 
-        $taxonomiesRedirectString = join('&', array_map(function ($taxonomy, $i) {
-            $_i = $i + 1;
-            return "{$taxonomy}=\$matches[{$_i}]";
-        }, $taxonomies, array_keys($taxonomies)));
+    /**
+     * The post type archive path that core's rules and get_post_type_archive_link() use,
+     * or null when the post type has no resolved rewrite.
+     */
+    private static function postTypeArchivePath(\WP_Post_Type $postTypeObject): ?string
+    {
+        global $wp_rewrite;
 
-        $regexPaged = "{$postTypeRewriteSlug}/{$taxonomiesRewriteSlugsString}/page/([0-9]{1,})?$";
-        $matchesIncrement = count($taxonomies) + 1;
-        $redirectPaged = "index.php?post_type={$postType}&{$taxonomiesRedirectString}&paged=\$matches[{$matchesIncrement}]";
-        \add_rewrite_rule($regexPaged, $redirectPaged, 'top');
+        // Core resolves rewrite, and adds its rules, only in the admin or with pretty permalinks.
+        if (! is_array($postTypeObject->rewrite) || (! \is_admin() && ! $wp_rewrite->using_permalinks())) {
+            return null;
+        }
 
-        $regex = "{$postTypeRewriteSlug}/{$taxonomiesRewriteSlugsString}/?$";
-        $redirect = "index.php?post_type={$postType}&{$taxonomiesRedirectString}";
-        \add_rewrite_rule($regex, $redirect, 'top');
+        $slug = is_string($postTypeObject->has_archive) && $postTypeObject->has_archive !== '' ? $postTypeObject->has_archive : $postTypeObject->rewrite['slug'];
+
+        return $postTypeObject->rewrite['with_front'] ? substr($wp_rewrite->front, 1) . $slug : $wp_rewrite->root . $slug;
     }
 
     public static function removeIndependentTaxonomyRewrite($taxonomy)
