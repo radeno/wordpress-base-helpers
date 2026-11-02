@@ -4,6 +4,21 @@ namespace helper;
 
 class AdminHelper
 {
+    /**
+     * Control over the whole site and its accounts: settings, plugins, themes, core updates,
+     * unfiltered uploads and markup, and other users; on a single site edit_users reaches an
+     * administrator's password too. restrictRoleAssignFilter() lets only a user who holds such
+     * a capability hand it out.
+     */
+    private const SITE_ADMIN_CAPABILITIES = [
+        'manage_options',
+        'activate_plugins', 'install_plugins', 'update_plugins', 'delete_plugins', 'edit_plugins',
+        'switch_themes', 'install_themes', 'update_themes', 'delete_themes', 'edit_themes',
+        'update_core', 'edit_files',
+        'unfiltered_upload', 'unfiltered_html',
+        'create_users', 'edit_users', 'promote_users', 'remove_users', 'delete_users',
+    ];
+
     public static function initActionsAndFilters()
     {
         self::reorganizeNavigationAction();
@@ -94,10 +109,11 @@ class AdminHelper
     {
         \add_filter('editable_roles', function ($all_roles) {
             $user = wp_get_current_user();
-            $next_level = 'level_' . ($user->user_level + 1);
 
+            // Granted capabilities are compared, not current_user_can(): DISALLOW_FILE_EDIT
+            // and the like deny some of these even to administrators.
             foreach ($all_roles as $name => $role) {
-                if (isset($role['capabilities'][$next_level])) {
+                if (array_any(self::SITE_ADMIN_CAPABILITIES, fn ($capability) => ! empty($role['capabilities'][$capability]) && empty($user->allcaps[$capability]))) {
                     unset($all_roles[$name]);
                 }
             }
