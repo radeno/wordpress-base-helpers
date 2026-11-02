@@ -30,18 +30,29 @@ class AdminHelper
             );
         });
 
-        \add_action('admin_init', function () {
-            if (! \current_user_can('edit_others_posts') && !isset($_GET['attachment-filter'])) {
-                $_GET['attachment-filter'] = 'mine';
+        // Users who cannot edit others' posts see only their own files in the Media
+        // Library. The media modal in the editor keeps showing every file.
+        \add_action('load-upload.php', function () {
+            if (! \current_user_can('edit_others_posts')) {
+                // List mode.
+                \add_action('pre_get_posts', function (\WP_Query $query) {
+                    if ($query->is_main_query()) {
+                        $query->set('author', \get_current_user_id());
+                    }
+                });
             }
         });
 
         \add_filter('ajax_query_attachments_args', function ($query = []) {
-            if (!\current_user_can('edit_others_posts') && empty($query['uploadedTo']) && \get_current_screen()?->parent_base == 'upload') {
-                $user_id = get_current_user_id();
-                if ($user_id) {
-                    $query['author'] = $user_id;
-                }
+            // Grid mode loads over admin-ajax.php, which has no screen, so tell it
+            // apart from the media modal by the page that sent the request.
+            $referer = \wp_get_referer();
+            if (
+                $referer
+                && parse_url($referer, PHP_URL_PATH) === parse_url(\admin_url('upload.php'), PHP_URL_PATH)
+                && ! \current_user_can('edit_others_posts')
+            ) {
+                $query['author'] = \get_current_user_id();
             }
 
             return $query;
